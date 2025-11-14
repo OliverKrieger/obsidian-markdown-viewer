@@ -11,6 +11,8 @@ import { useSlugMap } from "../hooks/useSlugMap";
 // Helper Components
 import { WikiLink } from "./markdown/WikiLink";
 import { createTableComponents } from "./markdown/TableComponents";
+import { createListComponents } from "./markdown/ListComponents";
+import { createHeadingComponents } from "./markdown/HeadingComponents";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -58,6 +60,8 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 components={{
                     a: (props) => <WikiLink {...props} />,
                     ...createTableComponents(),
+                    ...createListComponents(),
+                    ...createHeadingComponents(),
                 }}
             >
                 {content}
