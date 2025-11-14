@@ -25,13 +25,14 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                     [
                         remarkWikiLink,
                         {
-                            pageResolver: (pageName: string) => {
-                                // EXACT MATCHING RULES to align with index.json
+                            pageResolver: (raw: string) => {
+                                // Split Obsidian alias: [[real|alias]]
+                                const [realName] = raw.split("|");
 
                                 return [
-                                    pageName
+                                    realName
                                         .trim()
-                                        .replace(/^\/+|\/+$/g, "") // remove leading/trailing slashes
+                                        .replace(/^\/+|\/+$/g, "") // remove slashes
                                 ];
                             },
 
