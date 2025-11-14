@@ -1,20 +1,20 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkFrontmatter from 'remark-frontmatter';
-import remarkWikiLink from 'remark-wiki-link';
-import rehypeSlug from 'rehype-slug';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import { useMarkdown } from '../hooks/useMarkdown';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkWikiLink from "remark-wiki-link";
+import rehypeSlug from "rehype-slug";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
 
-interface Props {
-    path: string;
-}
+import { useMarkdown } from "../hooks/useMarkdown";
+import { useSlugMap } from "../hooks/useSlugMap";
 
-export const MarkdownViewer: React.FC<Props> = ({ path }) => {
+export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
+    const slugMap = useSlugMap();
 
-    if (error) return <div className="text-red-500">Error loading file: {error}</div>;
-    if (!content) return <div className="text-gray-400">Loading...</div>;
+    if (!slugMap) return <div className="p-6">Loading index…</div>;
+    if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+    if (!content) return <div className="p-6">Loading…</div>;
 
     return (
         <article className="prose dark:prose-invert max-w-none p-6">
@@ -22,7 +22,32 @@ export const MarkdownViewer: React.FC<Props> = ({ path }) => {
                 remarkPlugins={[
                     remarkGfm,
                     remarkFrontmatter,
-                    [remarkWikiLink, { hrefTemplate: (permalink: string) => `/page/${permalink}` }],
+                    [
+                        remarkWikiLink,
+                        {
+                            pageResolver: (pageName: string) => {
+                                // EXACT MATCHING RULES to align with index.json
+
+                                return [
+                                    pageName
+                                        .trim()
+                                        .replace(/^\/+|\/+$/g, "") // remove leading/trailing slashes
+                                ];
+                            },
+
+                            hrefTemplate: (slug: string) => {
+                                if (!slugMap) return "#";
+
+                                const realPath = slugMap[slug];
+                                if (!realPath) {
+                                    console.warn("Slug not found:", slug);
+                                    return "#";
+                                }
+
+                                return `/page/${encodeURIComponent(slug)}`;
+                            },
+                        },
+                    ],
                 ]}
                 rehypePlugins={[rehypeSlug, rehypeAutolinkHeadings]}
             >
