@@ -42,7 +42,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                                 const realPath = slugMap[slug];
                                 if (!realPath) {
                                     console.warn("Slug not found:", slug);
-                                    return "#";
+                                    return `/__missing__/${encodeURIComponent(slug)}`;
                                 }
 
                                 return `/page/${encodeURIComponent(slug)}`;
@@ -51,6 +51,35 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                     ],
                 ]}
                 rehypePlugins={[rehypeSlug, rehypeAutolinkHeadings]}
+                components={{
+                    a: ({ href, children, ...props }) => {
+                        if (!href) return <a {...props}>{children}</a>;
+
+                        const isMissing = href.startsWith("/__missing__/");
+
+                        if (isMissing) {
+                            const slug = decodeURIComponent(href.replace("/__missing__/", ""));
+                            return (
+                                <span
+                                    className="text-red-400 underline decoration-red-400 cursor-not-allowed"
+                                    title={`Page does not exist: ${slug}`}
+                                >
+                                    {children}
+                                </span>
+                            );
+                        }
+
+                        return (
+                            <a
+                                href={href}
+                                className="text-blue-500 underline"
+                                {...props}
+                            >
+                                {children}
+                            </a>
+                        );
+                    },
+                }}
             >
                 {content}
             </ReactMarkdown>
