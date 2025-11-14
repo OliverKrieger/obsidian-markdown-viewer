@@ -8,6 +8,9 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { useMarkdown } from "../hooks/useMarkdown";
 import { useSlugMap } from "../hooks/useSlugMap";
 
+// Helper Components
+import { WikiLink } from "./markdown/WikiLink";
+
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
     const slugMap = useSlugMap();
@@ -52,33 +55,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 ]}
                 rehypePlugins={[rehypeSlug, rehypeAutolinkHeadings]}
                 components={{
-                    a: ({ href, children, ...props }) => {
-                        if (!href) return <a {...props}>{children}</a>;
-
-                        const isMissing = href.startsWith("/__missing__/");
-
-                        if (isMissing) {
-                            const slug = decodeURIComponent(href.replace("/__missing__/", ""));
-                            return (
-                                <span
-                                    className="text-red-400 underline decoration-red-400 cursor-not-allowed"
-                                    title={`Page does not exist: ${slug}`}
-                                >
-                                    {children}
-                                </span>
-                            );
-                        }
-
-                        return (
-                            <a
-                                href={href}
-                                className="text-blue-500 underline"
-                                {...props}
-                            >
-                                {children}
-                            </a>
-                        );
-                    },
+                    a: (props) => <WikiLink {...props} />,
                 }}
             >
                 {content}
