@@ -10,6 +10,7 @@ import { useSlugMap } from "../hooks/useSlugMap";
 
 // Helper Components
 import { WikiLink } from "./markdown/WikiLink";
+import { createTableComponents } from "./markdown/TableComponents";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -56,6 +57,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 rehypePlugins={[rehypeSlug, rehypeAutolinkHeadings]}
                 components={{
                     a: (props) => <WikiLink {...props} />,
+                    ...createTableComponents(),
                 }}
             >
                 {content}
