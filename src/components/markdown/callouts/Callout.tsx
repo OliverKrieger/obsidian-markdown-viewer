@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 // Icons
 import { FaInfoCircle } from "react-icons/fa";
-import { GiSpellBook, GiQuillInk, GiRuneStone } from "react-icons/gi";
+import { GiSpellBook, GiQuillInk, GiRuneStone, GiCastle } from "react-icons/gi";
 import { MdWarning, MdDangerous } from "react-icons/md";
 
 export type CalloutType =
@@ -13,6 +13,7 @@ export type CalloutType =
     | "danger"
     | "quote"
     | "lore"
+    | "region"
     | string;
 
 interface CalloutProps {
@@ -72,6 +73,12 @@ const calloutConfig: Record<
         border: "border-emerald-600/60",
         bg: "bg-emerald-950/20",
         title: "text-emerald-300",
+    },
+    region: {
+        icon: GiCastle,
+        border: "border-purple-500",
+        bg: "bg-purple-900/30",
+        title: "text-purple-300",
     },
 };
 
