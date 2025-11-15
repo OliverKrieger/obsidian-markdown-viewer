@@ -25,3 +25,6 @@ dist-ssr
 
 # ignore the copy version of player markdown files
 public/content
+
+# ignore exe output
+LoreViewer.exe
