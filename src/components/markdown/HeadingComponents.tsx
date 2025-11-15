@@ -14,7 +14,7 @@ export function H1({ children }: Props) {
 // H2
 export function H2({ children }: Props) {
     return (
-        <h2 className="text-3xl font-bold tracking-tight text-emerald-200 mt-10 mb-4 border-b border-zinc-700 pb-1 scroll-mt-24">
+        <h2 className="text-3xl font-bold tracking-tight text-emerald-200 mt-10 mb-4 border-zinc-700 pb-1 scroll-mt-24">
             {children}
         </h2>
     );

@@ -13,6 +13,7 @@ import { WikiLink } from "./markdown/WikiLink";
 import { createTableComponents } from "./markdown/TableComponents";
 import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
+import { Divider } from "./markdown/Divider";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -59,6 +60,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 rehypePlugins={[rehypeSlug, rehypeAutolinkHeadings]}
                 components={{
                     a: (props) => <WikiLink {...props} />,
+                    hr: Divider,
                     ...createTableComponents(),
                     ...createListComponents(),
                     ...createHeadingComponents(),
