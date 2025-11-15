@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 
+// Icons
+import { FaInfoCircle } from "react-icons/fa";
+import { GiSpellBook, GiQuillInk, GiRuneStone } from "react-icons/gi";
+import { MdWarning, MdDangerous } from "react-icons/md";
+
 export type CalloutType =
     | "info"
     | "note"
@@ -7,7 +12,7 @@ export type CalloutType =
     | "warning"
     | "danger"
     | "quote"
-    | "lore"   // custom
+    | "lore"
     | string;
 
 interface CalloutProps {
@@ -16,37 +21,41 @@ interface CalloutProps {
     children?: ReactNode;
 }
 
-// Map each callout type to icon + colors
 const calloutConfig: Record<
     string,
-    { icon: string; border: string; bg: string; title: string }
+    {
+        icon: string | React.ComponentType<{ className?: string }>;
+        border: string;
+        bg: string;
+        title: string;
+    }
 > = {
     info: {
-        icon: "💡",
+        icon: FaInfoCircle,
         border: "border-blue-500",
         bg: "bg-blue-950/30",
         title: "text-blue-300",
     },
     note: {
-        icon: "📝",
+        icon: GiQuillInk,
         border: "border-purple-500",
         bg: "bg-purple-900/30",
         title: "text-purple-300",
     },
     tip: {
-        icon: "✨",
+        icon: GiRuneStone,
         border: "border-emerald-500",
         bg: "bg-emerald-950/30",
         title: "text-emerald-300",
     },
     warning: {
-        icon: "⚠️",
+        icon: MdWarning,
         border: "border-yellow-500",
         bg: "bg-yellow-900/30",
         title: "text-yellow-300",
     },
     danger: {
-        icon: "🔥",
+        icon: MdDangerous,
         border: "border-red-500",
         bg: "bg-red-900/30",
         title: "text-red-300",
@@ -58,16 +67,14 @@ const calloutConfig: Record<
         title: "text-zinc-300",
     },
 
-    // 🌙 CUSTOM LORE CALLOUT
     lore: {
-        icon: "📝",
+        icon: GiSpellBook,
         border: "border-emerald-600/60",
         bg: "bg-emerald-950/20",
         title: "text-emerald-300",
     },
 };
 
-// fallback for unknown callouts
 const fallback = {
     icon: "📘",
     border: "border-zinc-600",
@@ -77,22 +84,22 @@ const fallback = {
 
 export function Callout({ type, title, children }: CalloutProps) {
     const cfg = calloutConfig[type] || fallback;
+    const Icon = cfg.icon;
 
     return (
-        <div
-            className={`my-6 p-4 rounded-lg border-l-4 shadow-inner ${cfg.border} ${cfg.bg}`}
-        >
+        <div className={`my-6 p-4 rounded-lg border-l-4 shadow-inner ${cfg.border} ${cfg.bg}`}>
             <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{cfg.icon}</span>
+                {typeof Icon === "string" ? (
+                    <span className="text-xl">{Icon}</span>
+                ) : (
+                    <Icon className="text-xl" />
+                )}
 
                 {title && (
-                    <span className={`font-bold ${cfg.title}`}>
-                        {title}
-                    </span>
+                    <span className={`font-bold ${cfg.title}`}>{title}</span>
                 )}
             </div>
 
-            {/* Content */}
             <div className="pl-7">{children}</div>
         </div>
     );
