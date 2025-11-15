@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import open from "open";
+import getPort from "get-port";
 
 const isBundled = !!process.pkg || !!process.isBun;
 const exeDir = path.dirname(process.execPath);
@@ -9,23 +10,34 @@ const exeDir = path.dirname(process.execPath);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use EXE directory when bundled
 const baseDir = isBundled ? exeDir : __dirname;
 
 const app = express();
 const distPath = path.join(baseDir, "dist");
 
-// Serve static files
 app.use(express.static(distPath));
 
-// SPA fallback
 app.get(/.*/, (_, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
 });
 
-const PORT = 5678;
+async function start() {
+    const PORT = await getPort({ port: 5678 });
 
-app.listen(PORT, () => {
-  console.log(`World Viewer running at http://localhost:${PORT}`);
-  open(`http://localhost:${PORT}`);
-});
+    const server = app.listen(PORT, () => {
+        console.log(`World Viewer running at http://localhost:${PORT}`);
+        open(`http://localhost:${PORT}`);
+    });
+
+    // Graceful shutdown
+    const shutdown = () => {
+        server.close(() => {
+            process.exit(0);
+        });
+    };
+
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+}
+
+start();

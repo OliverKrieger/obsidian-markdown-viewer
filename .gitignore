@@ -26,5 +26,7 @@ dist-ssr
 # ignore the copy version of player markdown files
 public/content
 
-# ignore exe output
+# ignore build output
 LoreViewer.exe
+PlayerBundle.zip
+PlayerBundle/
