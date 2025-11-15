@@ -81,3 +81,12 @@ button:focus-visible {
 ul{
 	margin: 1rem 0;
 }
+
+article{
+	margin: auto;
+	max-width: 800px;
+}
+
+p{
+	margin: 1rem 0;
+}
