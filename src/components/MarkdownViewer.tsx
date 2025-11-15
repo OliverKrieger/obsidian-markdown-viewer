@@ -15,6 +15,7 @@ import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
 import { Blockquote } from "./markdown/Blockquote";
+import { renderCallout } from "./markdown/callouts/renderCallout";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -82,7 +83,16 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 components={{
                     a: (props) => <WikiLink {...props} />,
                     hr: Divider,
-                    blockquote: Blockquote,
+                    blockquote: ({ node, children }) => {
+                        const callout = renderCallout(node, Array.isArray(children) ? children : [children]);
+                        if (callout) return callout;
+
+                        return (
+                            <blockquote className="border-l-4 border-zinc-600 pl-4 italic my-6 text-zinc-400">
+                                {children}
+                            </blockquote>
+                        );
+                    },
                     ...createTableComponents(),
                     ...createListComponents(),
                     ...createHeadingComponents(),
