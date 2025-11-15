@@ -14,7 +14,6 @@ import { createTableComponents } from "./markdown/TableComponents";
 import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
-import { Blockquote } from "./markdown/Blockquote";
 import { renderCallout } from "./markdown/callouts/renderCallout";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {

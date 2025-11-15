@@ -60,7 +60,7 @@ const calloutConfig: Record<
 
     // 🌙 CUSTOM LORE CALLOUT
     lore: {
-        icon: "🜏",
+        icon: "📝",
         border: "border-emerald-600/60",
         bg: "bg-emerald-950/20",
         title: "text-emerald-300",

@@ -1,28 +1,43 @@
 import { Callout } from "./Callout";
 import type { ReactNode } from "react";
 
-export function renderCallout(node: any, children: ReactNode[]) {
-    if (!node.children?.length) return null;
+export function renderCallout(node: any, childrenArray: ReactNode[]) {
+    // The callout declaration must be inside the first <p>
+    const firstElement = node.children?.find(
+        (child: any) => child.type === "element" && child.tagName === "p"
+    );
 
-    const firstChild = node.children[0];
+    if (!firstElement) return null;
 
-    if (!firstChild?.children?.[0]?.value) return null;
+    const firstTextNode = firstElement.children?.find(
+        (c: any) => c.type === "text"
+    );
 
-    const text = firstChild.children[0].value.trim();
+    if (!firstTextNode) return null;
 
-    // detect [!type] Title
-    const match = text.match(/^\[!(?<type>[A-Za-z0-9_-]+)\]\s*(?<title>.*)?$/);
+    const text = firstTextNode.value.trim();
 
+    // Detect e.g. [!lore], [!quote] Title
+    const match = text.match(/^\[!(?<type>[\w-]+)\]\s*(?<title>.*)?$/i);
     if (!match?.groups) return null;
 
     const { type, title } = match.groups;
 
-    // remove first line (the callout declaration)
-    const content = children.slice(1);
+    // Remove the FIRST <p> from React children so [!lore] does not render
+    const cleanedChildren = childrenArray.filter((child: any) => {
+        // Drop paragraphs whose first text node IS the callout line
+        if (
+            child?.props?.children === text || 
+            child?.props?.children?.[0] === text
+        ) {
+            return false;
+        }
+        return true;
+    });
 
     return (
-        <Callout type={type.toLowerCase()} title={title}>
-            {content}
+        <Callout type={type.toLowerCase()} title={title || undefined}>
+            {cleanedChildren}
         </Callout>
     );
 }
