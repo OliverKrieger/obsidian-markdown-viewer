@@ -14,6 +14,7 @@ import { createTableComponents } from "./markdown/TableComponents";
 import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
+import { Blockquote } from "./markdown/Blockquote";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -33,28 +34,46 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                         remarkWikiLink,
                         {
                             pageResolver: (raw: string) => {
-                                // Fix Obsidian table escapes: [[Page\|Alias]]
-                                const cleaned = raw.replace(/\\\|/g, "|");
+                                // Normalize Obsidian escapes: [[Page\|Alias]] → [[Page|Alias]]
+                                const unescaped = raw.replace(/\\\|/g, "|").replace(/\\\]/g, "]").replace(/\\\[/g, "[");
 
-                                const [realName] = cleaned.split("|");
+                                // Split alias: [[page|alias]] or [[page#section|alias]]
+                                const [pathWithSection] = unescaped.split("|");
+
+                                // Split heading: [[page#section]]
+                                const [pageName] = pathWithSection.split("#");
 
                                 return [
-                                    realName
+                                    pageName
                                         .trim()
                                         .replace(/^\/+|\/+$/g, "")
                                 ];
                             },
 
-                            hrefTemplate: (slug: string) => {
+                            hrefTemplate: (rawSlug: string) => {
                                 if (!slugMap) return "#";
 
-                                const realPath = slugMap[slug];
+                                // Detect page#heading (Obsidian-style)
+                                const [pagePart, section] = rawSlug.split("#");
+
+                                const realPath = slugMap[pagePart];
                                 if (!realPath) {
-                                    console.warn("Slug not found:", slug);
-                                    return `/__missing__/${encodeURIComponent(slug)}`;
+                                    return `/__missing__/${encodeURIComponent(pagePart)}`;
                                 }
 
-                                return `/page/${encodeURIComponent(slug)}`;
+                                // If linking to a heading within the same page
+                                if (section) {
+                                    const fragment = section
+                                        .trim()
+                                        .toLowerCase()
+                                        .replace(/[^\w\s-]/g, "")
+                                        .replace(/\s+/g, "-");
+
+                                    return `/page/${encodeURIComponent(pagePart)}#${fragment}`;
+                                }
+
+                                // Normal link
+                                return `/page/${encodeURIComponent(pagePart)}`;
                             },
                         },
                     ],
@@ -63,6 +82,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 components={{
                     a: (props) => <WikiLink {...props} />,
                     hr: Divider,
+                    blockquote: Blockquote,
                     ...createTableComponents(),
                     ...createListComponents(),
                     ...createHeadingComponents(),
