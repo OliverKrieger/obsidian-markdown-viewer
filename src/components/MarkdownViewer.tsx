@@ -33,13 +33,15 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                         remarkWikiLink,
                         {
                             pageResolver: (raw: string) => {
-                                // Split Obsidian alias: [[real|alias]]
-                                const [realName] = raw.split("|");
+                                // Fix Obsidian table escapes: [[Page\|Alias]]
+                                const cleaned = raw.replace(/\\\|/g, "|");
+
+                                const [realName] = cleaned.split("|");
 
                                 return [
                                     realName
                                         .trim()
-                                        .replace(/^\/+|\/+$/g, "") // remove slashes
+                                        .replace(/^\/+|\/+$/g, "")
                                 ];
                             },
 
