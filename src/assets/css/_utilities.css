@@ -1,0 +1,64 @@
+/* ---------------------------------------------------------
+   HEADINGS
+--------------------------------------------------------- */
+@utility heading-1 {
+    @apply text-4xl font-extrabold tracking-tight text-brand-300 font-display mb-6 mt-10 scroll-mt-24;
+}
+
+@utility heading-2 {
+    @apply text-3xl font-bold tracking-tight text-brand-200 font-display mt-10 mb-4 scroll-mt-24;
+}
+
+@utility heading-3 {
+    @apply text-2xl font-semibold text-brand-100 font-display mt-8 mb-3 scroll-mt-20;
+}
+
+@utility heading-4 {
+    @apply text-xl font-semibold text-neutral-200 font-display mt-6 mb-2 scroll-mt-20;
+}
+
+@utility heading-5 {
+    @apply text-lg font-medium text-neutral-300 mt-4 mb-1 scroll-mt-16;
+}
+
+@utility heading-6 {
+    @apply text-base font-medium text-neutral-400 uppercase tracking-wide mt-3 mb-1 scroll-mt-16;
+}
+
+/* ---------------------------------------------------------
+   TABLES
+--------------------------------------------------------- */
+@utility table-base {
+    @apply min-w-full my-6 bg-surface-dark/60 shadow-sm rounded-lg text-sm border border-border-subtle;
+}
+
+@utility table-head {
+    @apply bg-surface-dark/80 text-neutral-100 border-b border-border-strong;
+}
+
+@utility table-row {
+    @apply even:bg-surface-dark/30 hover:bg-surface-dark/50 transition-colors;
+}
+
+@utility table-cell {
+    @apply px-4 py-2 text-neutral-300;
+}
+
+/* LISTS */
+@utility list-ul {
+    @apply list-disc pl-6 space-y-1 marker:text-brand-400;
+}
+
+@utility list-ol {
+    @apply list-decimal pl-6 space-y-1 marker:text-brand-300;
+}
+
+/* CALLOUTS */
+@utility callout-base {
+    @apply my-6 p-4 rounded-lg border-l-4 shadow-inner;
+}
+
+/* DIVIDER */
+@utility fancy-divider {
+    @apply my-12 flex items-center justify-center;
+}

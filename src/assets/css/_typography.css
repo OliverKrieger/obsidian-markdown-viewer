@@ -1,0 +1,53 @@
+/* ---------------------------------------------------------
+   TAILWIND TYPOGRAPHY TOKENS
+--------------------------------------------------------- */
+@plugin "@tailwindcss/typography" {
+    @theme {
+        --tw-prose-body: var(--text-page);
+        --tw-prose-headings: var(--color-brand-300);
+        --tw-prose-links: var(--color-brand-400);
+        --tw-prose-bullets: var(--color-brand-400);
+        --tw-prose-hr: var(--color-border-subtle);
+    }
+}
+
+/* ---------------------------------------------------------
+   PROSE RECIPE OVERRIDES
+--------------------------------------------------------- */
+@recipe prose {
+
+    p,
+    span,
+    strong,
+    li {
+        color: var(--tw-prose-body);
+    }
+
+    a {
+        color: var(--tw-prose-links);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--color-brand-300);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: var(--tw-prose-headings);
+        font-family: var(--font-display);
+    }
+
+    blockquote {
+        color: var(--tw-prose-body);
+        border-left-color: var(--tw-prose-hr);
+    }
+
+    hr {
+        border-color: var(--tw-prose-hr);
+    }
+}
