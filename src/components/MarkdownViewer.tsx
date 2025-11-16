@@ -14,7 +14,6 @@ import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
 import { renderCallout } from "./markdown/callouts/renderCallout";
-import { settings } from "../config/settings";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);

@@ -14,7 +14,7 @@ export function H1({ children }: Props) {
 // H2
 export function H2({ children }: Props) {
     return (
-        <h2 className="heading-2 border-b border-[var(--color-border-subtle)] pb-1">
+        <h2 className="heading-2 pb-1">
             {children}
         </h2>
     );
