@@ -1,31 +1,28 @@
 import { useEffect, useState } from "react";
+import { THEMES } from "../../components/theme/themeConfig";
+import type { ThemeId } from "../../components/theme/themeConfig";
 
-const THEMES = ["", "theme-arcane"] as const;
-type Theme = typeof THEMES[number];
+const STORAGE_KEY = "app-theme";
 
 export function useTheme() {
-    const [index, setIndex] = useState(0);
-    const theme = THEMES[index];
+    const [theme, setTheme] = useState<ThemeId>(() => {
+        return (localStorage.getItem(STORAGE_KEY) as ThemeId) || "theme-base";
+    });
 
     useEffect(() => {
-        // Remove other themes
-        THEMES.forEach(t => {
-            if (t) document.documentElement.classList.remove(t);
-        });
+        localStorage.setItem(STORAGE_KEY, theme);
 
-        // Apply new theme
-        if (theme) {
-            document.documentElement.classList.add(theme);
-        }
+        // Remove previous theme classes
+        document.documentElement.classList.remove(
+            ...THEMES.map((t) => t.id)
+        );
+
+        // Apply new theme class
+        document.documentElement.classList.add(theme);
     }, [theme]);
 
-    const toggleTheme = () => {
-        setIndex((index + 1) % THEMES.length);
+    return {
+        theme,
+        setTheme,
     };
-
-    const setTheme = (t: Theme) => {
-        setIndex(THEMES.indexOf(t));
-    };
-
-    return { theme, toggleTheme, setTheme };
 }

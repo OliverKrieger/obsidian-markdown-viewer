@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const MODE_KEY = "app-color-mode";
 
 export function useDarkMode() {
-    const [darkMode, setDarkMode] = useState(
-        () => document.documentElement.classList.contains("dark")
-    );
+    const [mode, setMode] = useState<"light" | "dark">(() => {
+        return (localStorage.getItem(MODE_KEY) as "light" | "dark") || "light";
+    });
 
-    const toggleDarkMode = () => {
-        document.documentElement.classList.toggle("dark");
-        setDarkMode(document.documentElement.classList.contains("dark"));
+    useEffect(() => {
+        localStorage.setItem(MODE_KEY, mode);
+
+        if (mode === "dark") {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }, [mode]);
+
+    return {
+        mode,
+        setMode,
+        toggleMode: () => setMode(mode === "dark" ? "light" : "dark"),
     };
-
-    return { darkMode, toggleDarkMode };
 }

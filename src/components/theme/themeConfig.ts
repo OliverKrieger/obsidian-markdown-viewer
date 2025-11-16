@@ -1,0 +1,10 @@
+// src/theme/themeConfig.ts
+export const THEMES = [
+    { id: "theme-base", label: "Base", recommendedMode: "light" },
+    { id: "theme-arcane", label: "Arcane", recommendedMode: "dark" },
+    { id: "theme-frosty-inferno", label: "Frosty Inferno", recommendedMode: "dark" },
+    { id: "theme-imperial", label: "Imperial Gold", recommendedMode: "light" },
+] as const;
+
+export type ThemeId = typeof THEMES[number]["id"];
+export type ColorMode = "light" | "dark";
