@@ -11,10 +11,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 color: "var(--text-page)",
             }}
         >
-            <header className="p-4 border-b flex items-center justify-between">
+            <header className="p-4 border-b border-tertiary-900 flex items-center justify-between">
                 <a href="/" className="text-lg font-semibold flex items-center gap-2">
                     <TbHomeSpark />
-                    <p>The Shattered Crown</p>
+                    <span>The Shattered Crown</span>
                 </a>
 
                 <ThemeSwitcher />

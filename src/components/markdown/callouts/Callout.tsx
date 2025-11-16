@@ -23,52 +23,31 @@ interface CalloutProps {
     children?: ReactNode;
 }
 
-const calloutConfig: Record<
+const calloutIcons: Record<
     string,
-    {
-        icon: string | React.ComponentType<{ className?: string }>;
-    }
+    string | React.ComponentType<{ className?: string }>
 > = {
-    info: {
-        icon: FaInfoCircle,
-    },
-    note: {
-        icon: GiQuillInk,
-    },
-    tip: {
-        icon: GiRuneStone,
-    },
-    warning: {
-        icon: MdWarning,
-    },
-    danger: {
-        icon: MdDangerous,
-    },
-    quote: {
-        icon: RiChatQuoteLine,
-    },
-
-    lore: {
-        icon: GiSpellBook,
-    },
-    region: {
-        icon: GiCastle,
-    },
+    info: FaInfoCircle,
+    note: GiQuillInk,
+    tip: GiRuneStone,
+    warning: MdWarning,
+    danger: MdDangerous,
+    quote: RiChatQuoteLine,
+    lore: GiSpellBook,
+    region: GiCastle,
 };
 
-const fallback = {
-    icon: FaBook ,
-};
+const fallbackIcon = FaBook;
 
 export function Callout({ type, title, children }: CalloutProps) {
     const key = type.toLowerCase();
-    const cssVar = (suffix: string) => `var(--callout-${key}-${suffix})`;
+    const Icon = calloutIcons[key] || fallbackIcon;
 
-    const Icon = calloutConfig[key]?.icon ?? fallback.icon;
+    const cssVar = (suffix: string) => `var(--callout-${key}-${suffix})`;
 
     return (
         <div
-            className="my-6 p-4 rounded-md border-l-4 shadow-sm"
+            className="callout-base"
             style={{
                 borderColor: cssVar("border"),
                 background: cssVar("bg"),

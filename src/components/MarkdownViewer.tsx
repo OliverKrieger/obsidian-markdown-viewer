@@ -8,13 +8,13 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { useMarkdown } from "../hooks/useMarkdown";
 import { useSlugMap } from "../hooks/useSlugMap";
 
-// Helper Components
 import { WikiLink } from "./markdown/WikiLink";
 import { createTableComponents } from "./markdown/TableComponents";
 import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
 import { renderCallout } from "./markdown/callouts/renderCallout";
+import { settings } from "../config/settings";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -34,34 +34,32 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                         remarkWikiLink,
                         {
                             pageResolver: (raw: string) => {
-                                // Normalize Obsidian escapes: [[Page\|Alias]] → [[Page|Alias]]
-                                const unescaped = raw.replace(/\\\|/g, "|").replace(/\\\]/g, "]").replace(/\\\[/g, "[");
+                                const unescaped = raw
+                                    .replace(/\\\|/g, "|")
+                                    .replace(/\\\]/g, "]")
+                                    .replace(/\\\[/g, "[");
 
-                                // Split alias: [[page|alias]] or [[page#section|alias]]
                                 const [pathWithSection] = unescaped.split("|");
-
-                                // Split heading: [[page#section]]
                                 const [pageName] = pathWithSection.split("#");
 
                                 return [
                                     pageName
                                         .trim()
-                                        .replace(/^\/+|\/+$/g, "")
+                                        .replace(/^\/+|\/+$/g, ""),
                                 ];
                             },
-
                             hrefTemplate: (rawSlug: string) => {
                                 if (!slugMap) return "#";
 
-                                // Detect page#heading (Obsidian-style)
                                 const [pagePart, section] = rawSlug.split("#");
-
                                 const realPath = slugMap[pagePart];
+
                                 if (!realPath) {
-                                    return `/__missing__/${encodeURIComponent(pagePart)}`;
+                                    return `/__missing__/${encodeURIComponent(
+                                        pagePart
+                                    )}`;
                                 }
 
-                                // If linking to a heading within the same page
                                 if (section) {
                                     const fragment = section
                                         .trim()
@@ -69,10 +67,11 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                                         .replace(/[^\w\s-]/g, "")
                                         .replace(/\s+/g, "-");
 
-                                    return `/page/${encodeURIComponent(pagePart)}#${fragment}`;
+                                    return `/page/${encodeURIComponent(
+                                        pagePart
+                                    )}#${fragment}`;
                                 }
 
-                                // Normal link
                                 return `/page/${encodeURIComponent(pagePart)}`;
                             },
                         },
@@ -83,11 +82,23 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                     a: (props) => <WikiLink {...props} />,
                     hr: Divider,
                     blockquote: ({ node, children }) => {
-                        const callout = renderCallout(node, Array.isArray(children) ? children : [children]);
+                        const callout = renderCallout(
+                            node,
+                            Array.isArray(children) ? children : [children]
+                        );
                         if (callout) return callout;
 
                         return (
-                            <blockquote className="border-l-4 border-zinc-600 pl-4 italic my-6 text-zinc-400">
+                            <blockquote
+                                className="my-6 pl-4 border-l-4 italic"
+                                style={{
+                                    borderColor:
+                                        "var(--callout-quote-border)",
+                                    background:
+                                        "var(--callout-quote-bg)",
+                                    color: "var(--callout-quote-text)",
+                                }}
+                            >
                                 {children}
                             </blockquote>
                         );

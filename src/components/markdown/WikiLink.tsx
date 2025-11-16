@@ -20,11 +20,7 @@ export function WikiLink({ href, children, ...props }: WikiLinkProps) {
 
     const isMissing = href.startsWith("/__missing__/");
 
-    // Flatten children into a single text string
     const rawText = flattenText(children).trim();
-
-    // Alias extraction:
-    // "Page|Alias" -> use Alias
     const alias = rawText.includes("|")
         ? rawText.split("|")[1].trim()
         : rawText;
@@ -33,7 +29,8 @@ export function WikiLink({ href, children, ...props }: WikiLinkProps) {
         const slug = decodeURIComponent(href.replace("/__missing__/", ""));
         return (
             <span
-                className="text-red-400 underline decoration-red-400 cursor-not-allowed"
+                className="underline cursor-not-allowed"
+                style={{ color: "#f87171" }} // explicit "error red"
                 title={`Page does not exist: ${slug}`}
             >
                 {alias}
@@ -41,10 +38,11 @@ export function WikiLink({ href, children, ...props }: WikiLinkProps) {
         );
     }
 
+    // Normal link — color is handled by prose recipe (a / a:hover)
     return (
         <a
             href={href}
-            className="text-blue-500 underline hover:text-blue-400"
+            className="underline decoration-1"
             {...props}
         >
             {alias}

@@ -23,3 +23,7 @@ a {
 a:hover {
     color: var(--color-brand-300);
 }
+
+p{
+    margin-bottom: 15px;
+}
