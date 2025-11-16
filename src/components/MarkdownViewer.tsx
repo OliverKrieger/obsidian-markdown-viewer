@@ -25,7 +25,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
     if (!content) return <div className="p-6">Loading…</div>;
 
     return (
-        <article className="prose dark:prose-invert max-w-none p-6">
+        <article className="max-w-none p-6">
             <ReactMarkdown
                 remarkPlugins={[
                     remarkGfm,

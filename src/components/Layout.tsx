@@ -15,7 +15,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 color: "var(--text-page)",
             }}
         >
-            <header className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+            <header className="p-4 border-b flex items-center justify-between">
                 <a href="/" className="text-lg font-semibold">
                     <div className="flex items-center">
                         <TbHomeSpark className="inline-block mr-2" />
@@ -23,7 +23,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                 </a>
 
-                <div className="flex gap-3 items-center opacity-80 text-sm text-brand-800 dark:text-brand-200">
+                <div className="flex gap-3 items-center opacity-80 text-sm">
                     <button onClick={toggleDarkMode} className="hover:opacity-100">
                         {darkMode ? "☀️ Light" : "🌙 Dark"}
                     </button>

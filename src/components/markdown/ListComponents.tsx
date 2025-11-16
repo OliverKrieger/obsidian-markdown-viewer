@@ -4,7 +4,7 @@ type Props = { children?: ReactNode };
 
 export function Ul({ children }: Props) {
     return (
-        <ul className="list-disc pl-6 space-y-1 marker:text-emerald-400">
+        <ul className="list-disc pl-6 space-y-1 marker:text-brand-400">
             {children}
         </ul>
     );
@@ -12,7 +12,7 @@ export function Ul({ children }: Props) {
 
 export function Ol({ children }: Props) {
     return (
-        <ol className="list-decimal pl-6 space-y-1 marker:text-blue-400">
+        <ol className="list-decimal pl-6 space-y-1 marker:text-brand-400">
             {children}
         </ol>
     );

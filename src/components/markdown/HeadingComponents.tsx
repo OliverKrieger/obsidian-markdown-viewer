@@ -5,7 +5,14 @@ type Props = { children?: ReactNode };
 // H1
 export function H1({ children }: Props) {
     return (
-        <h1 className="text-4xl font-extrabold tracking-tight text-emerald-300 mb-6 mt-10 scroll-mt-24 group flex items-center gap-2">
+        <h1
+            className="
+                text-4xl font-extrabold tracking-tight
+                mb-6 mt-10 scroll-mt-24
+                group flex items-center gap-2
+            "
+            style={{ color: "var(--tw-prose-headings)" }}
+        >
             {children}
         </h1>
     );
@@ -14,7 +21,14 @@ export function H1({ children }: Props) {
 // H2
 export function H2({ children }: Props) {
     return (
-        <h2 className="text-3xl font-bold tracking-tight text-emerald-200 mt-10 mb-4 border-zinc-700 pb-1 scroll-mt-24">
+        <h2
+            className="
+                text-3xl font-bold tracking-tight
+                mt-10 mb-4 pb-1 scroll-mt-24
+                border-b border-zinc-700
+            "
+            style={{ color: "var(--tw-prose-headings)" }}
+        >
             {children}
         </h2>
     );
@@ -23,7 +37,13 @@ export function H2({ children }: Props) {
 // H3
 export function H3({ children }: Props) {
     return (
-        <h3 className="text-2xl font-semibold text-emerald-100 mt-8 mb-3 scroll-mt-20">
+        <h3
+            className="
+                text-2xl font-semibold
+                mt-8 mb-3 scroll-mt-20
+            "
+            style={{ color: "var(--tw-prose-headings)" }}
+        >
             {children}
         </h3>
     );
@@ -32,7 +52,13 @@ export function H3({ children }: Props) {
 // H4
 export function H4({ children }: Props) {
     return (
-        <h4 className="text-xl font-semibold text-zinc-200 mt-6 mb-2 scroll-mt-20">
+        <h4
+            className="
+                text-xl font-semibold
+                mt-6 mb-2 scroll-mt-20
+            "
+            style={{ color: "var(--tw-prose-headings)" }}
+        >
             {children}
         </h4>
     );
@@ -41,7 +67,13 @@ export function H4({ children }: Props) {
 // H5
 export function H5({ children }: Props) {
     return (
-        <h5 className="text-lg font-medium text-zinc-300 mt-4 mb-1 scroll-mt-16">
+        <h5
+            className="
+                text-lg font-medium
+                mt-4 mb-1 scroll-mt-16
+            "
+            style={{ color: "var(--tw-prose-headings)" }}
+        >
             {children}
         </h5>
     );
@@ -50,7 +82,13 @@ export function H5({ children }: Props) {
 // H6
 export function H6({ children }: Props) {
     return (
-        <h6 className="text-base font-medium text-zinc-400 mt-3 mb-1 uppercase tracking-wide scroll-mt-16">
+        <h6
+            className="
+                text-base font-medium uppercase tracking-wide
+                mt-3 mb-1 scroll-mt-16
+            "
+            style={{ color: "var(--tw-prose-headings)" }}
+        >
             {children}
         </h6>
     );
