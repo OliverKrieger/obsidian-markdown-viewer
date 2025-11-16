@@ -68,15 +68,19 @@
 --------------------------------------------------------- */
 @utility list-ul {
     @apply list-disc pl-6 space-y-1;
-    &::marker {
-        color: var(--color-secondary-500);
+    li{
+        &::marker {
+            color: var(--color-secondary-500);
+        }
     }
 }
 
 @utility list-ol {
     @apply list-decimal pl-6 space-y-1;
-    &::marker {
-        color: var(--color-secondary-500);
+    li{
+        &::marker {
+            color: var(--color-secondary-500);
+        }
     }
 }
 
