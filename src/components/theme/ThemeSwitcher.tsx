@@ -6,7 +6,7 @@ import { useDarkMode } from "../../hooks/themes/useDarkMode";
 
 export function ThemeSwitcher() {
     const { theme, setTheme } = useTheme();
-    const { mode, setMode } = useDarkMode();
+    const { mode, setMode, toggleMode } = useDarkMode();
 
     function handleThemeChange(e: React.ChangeEvent<HTMLSelectElement>) {
         const newTheme = e.target.value as ThemeId;
@@ -30,33 +30,32 @@ export function ThemeSwitcher() {
     };
 
     return (
-        <div className="flex flex-col gap-2 text-sm opacity-80 hover:opacity-100">
-            {/* Mode */}
-            <label className="font-semibold text-xs">Mode</label>
-            <select
-                className="border p-1 rounded outline-none"
-                style={selectStyle}
-                value={mode}
-                onChange={(e) => setMode(e.target.value as "light" | "dark")}
+        <div className="flex flex-row gap-2">
+            <div 
+                className="flex flex-col items-start cursor-pointer hover:text-brand-500 transition-all ease-in-out duration-200"
+                onClick={toggleMode}
             >
-                <option value="light" style={optionStyle}>Light</option>
-                <option value="dark" style={optionStyle}>Dark</option>
-            </select>
+                {/* Mode */}
+                <div className="font-semibold text-md uppercase">Mode</div>
+                <span className="text-xs italic">{mode}</span>
+            </div>
 
-            {/* Theme */}
-            <label className="font-semibold text-xs mt-2">Theme</label>
-            <select
-                className="border p-1 rounded outline-none"
-                style={selectStyle}
-                value={theme}
-                onChange={handleThemeChange}
-            >
-                {THEMES.map((t) => (
-                    <option key={t.id} value={t.id} style={optionStyle}>
-                        {t.label}
-                    </option>
-                ))}
-            </select>
+            <div className="flex flex-col items-start uppercase">
+                {/* Theme */}
+                <label className="font-semibold text-md ml-1">Theme</label>
+                <select
+                    className="border rounded outline-none text-xs border-none italic"
+                    style={selectStyle}
+                    value={theme}
+                    onChange={handleThemeChange}
+                >
+                    {THEMES.map((t) => (
+                        <option key={t.id} value={t.id} style={optionStyle}>
+                            {t.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
         </div>
     );
 }
