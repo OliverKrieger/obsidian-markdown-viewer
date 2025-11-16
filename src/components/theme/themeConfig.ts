@@ -1,7 +1,7 @@
 // src/theme/themeConfig.ts
 export const THEMES = [
-    { id: "theme-base", label: "Base", recommendedMode: "light" },
-    { id: "theme-arcane", label: "Arcane", recommendedMode: "dark" },
+    { id: "theme-base", label: "Base", recommendedMode: "dark" },
+    { id: "theme-arcane", label: "Arcane", recommendedMode: "light" },
     { id: "theme-frosty-inferno", label: "Frosty Inferno", recommendedMode: "dark" },
     { id: "theme-imperial", label: "Imperial Gold", recommendedMode: "light" },
 ] as const;
