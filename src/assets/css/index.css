@@ -1,92 +1,208 @@
-@import "tailwindcss";
+/* ---------------------------------------------------------
+   LOAD TAILWIND + TYPOGRAPHY PLUGIN
+--------------------------------------------------------- */
 
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ---------------------------------------------------------
+   THEME TOKENS
+   Only custom properties + @keyframes allowed here.
+--------------------------------------------------------- */
+
+@theme {
+	/* Brand Colors */
+	--color-brand-50: #f1f7f3;
+	--color-brand-100: #d9efe3;
+	--color-brand-200: #b0e1c7;
+	--color-brand-300: #7ed0a6;
+	--color-brand-400: #4cbf85;
+	--color-brand-500: #2aa96a;
+	--color-brand-600: #1f8753;
+	--color-brand-700: #186a42;
+	--color-brand-800: #125132;
+	--color-brand-900: #0c3923;
+
+	/* Surfaces */
+	--color-surface-light: #fafaf9;
+	--color-surface-dark: #0b0b0c;
+
+	/* Borders */
+	--color-border-subtle: #3f3f46;
+	--color-border-strong: #27272a;
+
+	/* Fonts */
+	--font-display: Cinzel, serif;
+	--font-body: Inter, system-ui, sans-serif;
+
+	/* Spacing */
+	--spacing-page: 1.5rem;
+}
+
+/* ---------------------------------------------------------
+   ARCANE THEME (ALTERNATE)
+   Overrides only the variables you want changed
+--------------------------------------------------------- */
+
+.theme-arcane {
+	/* Brand Colors — purples and blues */
+	--color-brand-50: #f5f3ff;
+	--color-brand-100: #e0d7ff;
+	--color-brand-200: #c4b5fd;
+	--color-brand-300: #a78bfa;
+	--color-brand-400: #8b5cf6;
+	--color-brand-500: #7c3aed;
+	--color-brand-600: #6d28d9;
+	--color-brand-700: #5b21b6;
+	--color-brand-800: #4c1d95;
+	--color-brand-900: #3b1677;
+
+	/* Surfaces – deeper, enchanted feeling */
+	--color-surface-light: #faf7ff;
+	--color-surface-dark: #0d0717;
+
+	/* Borders */
+	--color-border-subtle: #4b3a78;
+	--color-border-strong: #2b204b;
+
+	/* Typography */
+	--tw-prose-headings: var(--color-brand-300);
+	--tw-prose-links: var(--color-brand-400);
+	--tw-prose-bullets: var(--color-brand-400);
+	--tw-prose-hr: var(--color-border-subtle);
+}
+
+
+/* ---------------------------------------------------------
+   TYPOGRAPHY CUSTOMIZATION
+   Tailwind v4: use CSS variables inside plugin block.
+--------------------------------------------------------- */
+
+@plugin "@tailwindcss/typography" {
+	@theme {
+		--tw-prose-body: var(--color-neutral-900);
+		--tw-prose-headings: var(--color-brand-300);
+		--tw-prose-links: var(--color-brand-400);
+		--tw-prose-bullets: var(--color-brand-400);
+		--tw-prose-hr: var(--color-border-subtle);
+	}
+}
+
+/* Dark Mode Overrides */
+.dark {
+	--tw-prose-body: var(--color-neutral-100);
+	--tw-prose-headings: var(--color-brand-200);
+	--tw-prose-links: var(--color-brand-300);
+	--tw-prose-bullets: var(--color-brand-300);
+	--tw-prose-hr: var(--color-border-subtle);
+}
+
+.theme-arcane {
+  --tw-prose-body: #e6e0ff; /* soft violet */
+}
+
+.theme-arcane.dark {
+	--tw-prose-body: #e6e0ff;
+	--tw-prose-headings: var(--color-brand-200);
+	--tw-prose-links: var(--color-brand-300);
+	--tw-prose-bullets: var(--color-brand-300);
+	--tw-prose-hr: var(--color-border-subtle);
+}
+
+/* ---------------------------------------------------------
+   CUSTOM UTILITIES
+--------------------------------------------------------- */
+
+@utility heading-1 {
+	@apply text-4xl font-extrabold tracking-tight text-brand-300 font-display mb-6 mt-10 scroll-mt-24;
+}
+
+@utility heading-2 {
+	@apply text-3xl font-bold tracking-tight text-brand-200 font-display mt-10 mb-4 scroll-mt-24;
+}
+
+@utility heading-3 {
+	@apply text-2xl font-semibold text-brand-100 font-display mt-8 mb-3 scroll-mt-20;
+}
+
+@utility heading-4 {
+	@apply text-xl font-semibold text-neutral-200 font-display mt-6 mb-2 scroll-mt-20;
+}
+
+@utility heading-5 {
+	@apply text-lg font-medium text-neutral-300 mt-4 mb-1 scroll-mt-16;
+}
+
+@utility heading-6 {
+	@apply text-base font-medium text-neutral-400 uppercase tracking-wide mt-3 mb-1 scroll-mt-16;
+}
+
+/* Tables */
+@utility table-base {
+	@apply min-w-full my-6 bg-surface-dark/60 shadow-sm rounded-lg text-sm border border-border-subtle;
+}
+
+@utility table-head {
+	@apply bg-surface-dark/80 text-neutral-100 border-b border-border-strong;
+}
+
+@utility table-row {
+	@apply even:bg-surface-dark/30 hover:bg-surface-dark/50 transition-colors;
+}
+
+@utility table-cell {
+	@apply px-4 py-2 text-neutral-300;
+}
+
+/* Lists */
+@utility list-ul {
+	@apply list-disc pl-6 space-y-1 marker:text-brand-400;
+}
+
+@utility list-ol {
+	@apply list-decimal pl-6 space-y-1 marker:text-brand-300;
+}
+
+/* Callouts */
+@utility callout-base {
+	@apply my-6 p-4 rounded-lg border-l-4 shadow-inner;
+}
+
+/* Divider */
+@utility fancy-divider {
+	@apply my-12 flex items-center justify-center;
+}
+
+/* Root element fix */
 #root {
 	width: 100%;
 }
 
 :root {
-	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-	line-height: 1.5;
-	font-weight: 400;
+	--bg-page: var(--color-surface-light);
+	--text-page: var(--neutral-900);
+}
 
-	color-scheme: light dark;
-	color: rgba(255, 255, 255, 0.87);
-	background-color: #242424;
+.dark {
+	--bg-page: var(--color-surface-dark);
+	--text-page: var(--neutral-100);
+}
 
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+article {
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+ul,
+ol {
+	margin: 15px 0;
 }
 
 a {
-	font-weight: 500;
-	color: #646cff;
-	text-decoration: inherit;
-}
+	color: var(--color-brand-400);
+	transition: all 0.3s ease;
 
-a:hover {
-	color: #535bf2;
-}
-
-body {
-	margin: 0;
-	display: flex;
-	place-items: center;
-	min-width: 320px;
-	min-height: 100vh;
-}
-
-h1 {
-	font-size: 3.2em;
-	line-height: 1.1;
-}
-
-button {
-	border-radius: 8px;
-	border: 1px solid transparent;
-	padding: 0.6em 1.2em;
-	font-size: 1em;
-	font-weight: 500;
-	font-family: inherit;
-	background-color: #1a1a1a;
-	cursor: pointer;
-	transition: border-color 0.25s;
-}
-
-button:hover {
-	border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible {
-	outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-	:root {
-		color: #213547;
-		background-color: #ffffff;
+	&:hover {
+		color: var(--color-brand-300);
 	}
-
-	a:hover {
-		color: #747bff;
-	}
-
-	button {
-		background-color: #f9f9f9;
-	}
-}
-
-ul{
-	margin: 1rem 0;
-}
-
-article{
-	margin: auto;
-	max-width: 800px;
-}
-
-p{
-	margin: 1rem 0;
 }

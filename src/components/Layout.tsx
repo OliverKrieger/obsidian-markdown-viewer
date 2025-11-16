@@ -1,20 +1,42 @@
 import { TbHomeSpark } from "react-icons/tb";
 
-export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="min-h-screen w-full bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col">
-        <header className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
-            <a href="/" className="text-lg font-semibold">
-                <div className="flex items-center">
-                    <TbHomeSpark className="inline-block mr-2" />
-                    <p>The Shattered Crown</p>
-                </div>
-            </a>
-            <span className="text-sm opacity-70">Player Compendium</span>
-        </header>
+import { useTheme } from "../hooks/themes/useTheme";  // new hook
+import { useDarkMode } from "../hooks/themes/useDarkMode"; // new hook
 
-        {/* The magic fix: flex-grow ensures the page always fills full height */}
-        <main className="flex-1 w-full overflow-x-hidden">
-            {children}
-        </main>
-    </div>
-);
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { toggleTheme } = useTheme();   // new hook
+    const { darkMode, toggleDarkMode } = useDarkMode();     // new hook
+
+    return (
+        <div
+            className={`min-h-screen w-full flex flex-col`}
+            style={{
+                backgroundColor: "var(--bg-page)",
+                color: "var(--text-page)",
+            }}
+        >
+            <header className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                <a href="/" className="text-lg font-semibold">
+                    <div className="flex items-center">
+                        <TbHomeSpark className="inline-block mr-2" />
+                        <p>The Shattered Crown</p>
+                    </div>
+                </a>
+
+                <div className="flex gap-3 items-center opacity-80 text-sm text-brand-800 dark:text-brand-200">
+                    <button onClick={toggleDarkMode} className="hover:opacity-100">
+                        {darkMode ? "☀️ Light" : "🌙 Dark"}
+                    </button>
+
+                    <button onClick={toggleTheme} className="hover:opacity-100">
+                        🎨 Theme
+                    </button>
+                </div>
+            </header>
+
+            <main className="flex-1 w-full overflow-x-hidden">
+                {children}
+            </main>
+        </div>
+    );
+};
