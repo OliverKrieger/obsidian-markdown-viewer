@@ -1,0 +1,62 @@
+/* ---------------------------------------------------------
+   CALLOUT COLOR TOKENS (BASE)
+--------------------------------------------------------- */
+
+:root {
+    /* Info */
+    --callout-info-border: #38bdf8;
+    --callout-info-bg: rgba(14, 165, 233, 0.08);
+    --callout-info-title: #7dd3fc;
+    --callout-info-text: var(--text-page);
+
+    /* Note */
+    --callout-note-border: #a78bfa;
+    --callout-note-bg: rgba(139, 92, 246, 0.1);
+    --callout-note-title: #c4b5fd;
+    --callout-note-text: var(--text-page);
+
+    /* Tip */
+    --callout-tip-border: #34d399;
+    --callout-tip-bg: rgba(16, 185, 129, 0.08);
+    --callout-tip-title: #6ee7b7;
+    --callout-tip-text: var(--text-page);
+
+    /* Warning */
+    --callout-warning-border: #facc15;
+    --callout-warning-bg: rgba(234, 179, 8, 0.1);
+    --callout-warning-title: #fde68a;
+    --callout-warning-text: var(--text-page);
+
+    /* Danger */
+    --callout-danger-border: #f87171;
+    --callout-danger-bg: rgba(239, 68, 68, 0.12);
+    --callout-danger-title: #fca5a5;
+    --callout-danger-text: var(--text-page);
+
+    /* Quote */
+    --callout-quote-border: #71717a;
+    --callout-quote-bg: rgba(82, 82, 91, 0.1);
+    --callout-quote-title: #d4d4d8;
+    --callout-quote-text: var(--text-page);
+
+    /* Lore */
+    --callout-lore-border: #10b981;
+    --callout-lore-bg: rgba(6, 95, 70, 0.2);
+    --callout-lore-title: #34d399;
+    --callout-lore-text: var(--text-page);
+
+    /* Region */
+    --callout-region-border: #a78bfa;
+    --callout-region-bg: rgba(88, 28, 135, 0.25);
+    --callout-region-title: #c4b5fd;
+    --callout-region-text: var(--text-page);
+}
+
+.dark {
+    --callout-info-bg: rgba(14, 165, 233, 0.15);
+    --callout-note-bg: rgba(139, 92, 246, 0.18);
+    --callout-tip-bg: rgba(16, 185, 129, 0.15);
+    --callout-warning-bg: rgba(234, 179, 8, 0.18);
+    --callout-danger-bg: rgba(239, 68, 68, 0.18);
+    --callout-quote-bg: rgba(82, 82, 91, 0.18);
+}

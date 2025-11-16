@@ -1,16 +1,21 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Theme tokens */
+/* ---------------------------------------------------------
+   BASE TOKENS
+--------------------------------------------------------- */
 @import "./_tokens-base.css";
 @import "./_tokens-dark.css";
 @import "./_tokens-themes.css";
 
-/* Typography system */
+/* ---------------------------------------------------------
+   CALLOUT TOKENS — MUST BE IN REAL SELECTORS
+--------------------------------------------------------- */
+@import "./_tokens-callouts.css";
+
+/* ---------------------------------------------------------
+   OTHER IMPORTS
+--------------------------------------------------------- */
 @import "./_typography.css";
-
-/* Utilities */
 @import "./_utilities.css";
-
-/* Layout */
 @import "./_layout.css";
