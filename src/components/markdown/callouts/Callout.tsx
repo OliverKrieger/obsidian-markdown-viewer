@@ -29,6 +29,7 @@ const calloutConfig: Record<
         border: string;
         bg: string;
         title: string;
+        text?: string;
     }
 > = {
     info: {
@@ -71,14 +72,16 @@ const calloutConfig: Record<
     lore: {
         icon: GiSpellBook,
         border: "border-emerald-600/60",
-        bg: "bg-emerald-950/20",
+        bg: "bg-emerald-900/70",
         title: "text-emerald-300",
+        text: "text-white",
     },
     region: {
         icon: GiCastle,
         border: "border-purple-500",
-        bg: "bg-purple-900/30",
+        bg: "bg-purple-900/70",
         title: "text-purple-300",
+        text: "text-white",
     },
 };
 
@@ -94,7 +97,7 @@ export function Callout({ type, title, children }: CalloutProps) {
     const Icon = cfg.icon;
 
     return (
-        <div className={`my-6 p-4 rounded-lg border-l-4 shadow-inner ${cfg.border} ${cfg.bg}`}>
+        <div className={`my-6 p-4 rounded-lg border-l-4 shadow-inner ${cfg.border} ${cfg.bg} ${cfg.text || ""}`}>
             <div className="flex items-center gap-2 mb-2">
                 {typeof Icon === "string" ? (
                     <span className="text-xl">{Icon}</span>
@@ -107,7 +110,7 @@ export function Callout({ type, title, children }: CalloutProps) {
                 )}
             </div>
 
-            <div className="pl-7">{children}</div>
+            <div className={`pl-7`}>{children}</div>
         </div>
     );
 }
