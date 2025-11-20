@@ -38,7 +38,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     p-4 
                     border-b border-tertiary-900 
                     flex items-center justify-between
-                    bg-[var(--bg-page)]
+                    bg-(--bg-page)
                 "
             >
                 <div className="flex items-center gap-3">

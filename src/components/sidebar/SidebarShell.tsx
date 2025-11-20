@@ -23,7 +23,7 @@ export function SidebarShell({ open, onClose, children, headerHeight }: SidebarS
                 className={`
                     fixed left-0 z-40 w-64
                     border-r border-tertiary-900
-                    bg-neutral-950/90 backdrop-blur
+                    bg-(--bg-page) backdrop-blur
                     transform transition-transform duration-300
                     h-[calc(100vh-var(--header-height))]
                     md:translate-x-0
