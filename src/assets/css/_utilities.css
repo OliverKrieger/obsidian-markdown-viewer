@@ -97,3 +97,31 @@
 @utility fancy-divider {
     @apply my-12 flex items-center justify-center;
 }
+
+/* ---------------------------------------------------------
+   SCROLLBAR STYLES
+--------------------------------------------------------- */
+
+::-webkit-scrollbar {
+    width: 6px;       /* Make it slim */
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-page);  /* Match your theme */
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-tertiary-500); /* Use your existing color vars */
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-tertiary-500);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-tertiary-500) var(--bg-page);
+}

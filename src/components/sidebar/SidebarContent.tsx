@@ -89,7 +89,7 @@ function Section({
             </button>
 
             <div
-                className={`transition-all overflow-hidden ${open ? "max-h-96" : "max-h-0"
+                className={`transition-all overflow-hidden ${open ? "max-h-full" : "max-h-0"
                     }`}
             >
                 <ul className="space-y-1 pl-2">{children}</ul>
