@@ -49,7 +49,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         <TbMenu2 size={22} />
                     </button>
 
-                    <a href="#/" className="text-lg font-semibold flex items-center gap-2">
+                    <a href="/" className="text-lg font-semibold flex items-center gap-2">
                         <TbHomeSpark />
                         <span>The Shattered Crown</span>
                     </a>
