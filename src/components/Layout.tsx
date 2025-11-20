@@ -33,7 +33,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             {/* HEADER (measured) */}
             <header
                 ref={headerRef}
-                className="p-4 border-b border-tertiary-900 flex items-center justify-between"
+                className="
+                    sticky top-0 z-50
+                    p-4 
+                    border-b border-tertiary-900 
+                    flex items-center justify-between
+                    bg-[var(--bg-page)]
+                "
             >
                 <div className="flex items-center gap-3">
                     <button
