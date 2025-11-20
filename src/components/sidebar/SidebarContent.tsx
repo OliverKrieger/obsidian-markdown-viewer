@@ -1,25 +1,18 @@
 // components/sidebar/SidebarContent.tsx
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useSlugMap } from "../../hooks/useSlugMap";
-import { extractMissingPagesFromWindow } from "../../utils/extractMissingPages";
 
-import { FaBook, FaQuestionCircle, FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { FaBook, FaChevronDown, FaChevronRight } from "react-icons/fa";
 
 export function SidebarContent() {
     const slugMap = useSlugMap();
 
     // Collapsible section states
     const [openPages, setOpenPages] = useState(true);
-    const [openMissing, setOpenMissing] = useState(true);
 
     const existingPages = slugMap ? Object.keys(slugMap).sort() : [];
-
-    const missingPages = useMemo(() => {
-        const discovered = extractMissingPagesFromWindow();
-        return [...new Set(discovered)].sort();
-    }, [slugMap]);
 
     return (
         <>
@@ -40,20 +33,6 @@ export function SidebarContent() {
                     />
                 ))}
             </Section>
-
-            {/* Missing pages */}
-            {missingPages.length > 0 && (
-                <Section
-                    title="Missing Pages"
-                    danger
-                    open={openMissing}
-                    onToggle={() => setOpenMissing(!openMissing)}
-                >
-                    {missingPages.map((title) => (
-                        <MissingItem key={title} title={title} />
-                    ))}
-                </Section>
-            )}
         </>
     );
 }
@@ -113,15 +92,6 @@ function LinkItem({
                 {icon}
                 {label}
             </Link>
-        </li>
-    );
-}
-
-function MissingItem({ title }: { title: string }) {
-    return (
-        <li className="flex items-center gap-2 text-red-400">
-            <FaQuestionCircle className="opacity-80" />
-            {title}
         </li>
     );
 }
