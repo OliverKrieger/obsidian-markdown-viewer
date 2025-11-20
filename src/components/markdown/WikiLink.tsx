@@ -27,14 +27,17 @@ export function WikiLink({ href, children, ...props }: WikiLinkProps) {
 
     if (isMissing) {
         const slug = decodeURIComponent(href.replace("/__missing__/", ""));
+
         return (
-            <span
+            <a
+                href={href}
                 className="underline cursor-not-allowed"
-                style={{ color: "#f87171" }} // explicit "error red"
+                style={{ color: "#f87171" }} // error red
                 title={`Page does not exist: ${slug}`}
+                onClick={(e) => e.preventDefault()} // still blocks navigation
             >
                 {alias}
-            </span>
+            </a>
         );
     }
 
