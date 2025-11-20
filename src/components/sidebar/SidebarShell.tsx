@@ -14,7 +14,7 @@ export function SidebarShell({ open, onClose, children, headerHeight }: SidebarS
             {/* Mobile backdrop */}
             {open && (
                 <div
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden"
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 xl:hidden"
                     onClick={onClose}
                 />
             )}
@@ -26,7 +26,7 @@ export function SidebarShell({ open, onClose, children, headerHeight }: SidebarS
                     bg-(--bg-page) backdrop-blur
                     transform transition-transform duration-300
                     h-[calc(100vh-var(--header-height))]
-                    md:translate-x-0
+                    xl:translate-x-0
                     ${open ? "translate-x-0" : "-translate-x-full"}
                 `}
                 style={{

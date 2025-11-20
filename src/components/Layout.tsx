@@ -43,8 +43,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             >
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="md:hidden p-2 rounded hover:bg-tertiary-900/20"
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="xl:hidden p-2 rounded hover:bg-tertiary-900/20"
                     >
                         <TbMenu2 size={22} />
                     </button>
