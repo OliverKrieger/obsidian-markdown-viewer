@@ -6,6 +6,7 @@ import { SidebarContent } from "./sidebar/SidebarContent";
 import { SidebarSearch } from "./sidebar/SidebarSearch";
 import { ThemeSwitcher } from "./theme/ThemeSwitcher";
 import { useSlugMap } from "../hooks/useSlugMap";
+import { ModeToggle } from "./view_mode/ModeToggle";
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,6 +56,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         <TbHomeSpark />
                         <span>The Shattered Crown</span>
                     </a>
+
+                    {/* Mode toggle (dev only) */}
+                    <ModeToggle />
                 </div>
 
                 <ThemeSwitcher />

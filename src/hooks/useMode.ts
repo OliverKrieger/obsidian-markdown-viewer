@@ -1,15 +1,9 @@
-import { useEffect, useState } from "react";
-import type { ViewerMode } from "../types/viewer";
+import { useViewerModeStore } from "../store/viewerMode";
 
 export function useMode() {
-    const allowSwitch = import.meta.env.VITE_MODE === "development";
-    const initial: ViewerMode = import.meta.env.VITE_VIEWER_MODE === "player" ? "player" : "dm";
-    const [mode, setMode] = useState(initial);
+    return useViewerModeStore((s) => s.mode);
+}
 
-    useEffect(() => {
-        if (!allowSwitch) return;
-        (window as any).setViewerMode = setMode; // dev convenience
-    }, []);
-
-    return mode;
+export function useSetMode() {
+    return useViewerModeStore((s) => s.setMode);
 }
