@@ -49,28 +49,50 @@ function pruneToManifest(contentRoot, manifestPath) {
     const allowedMd = new Set(Object.values(manifest.slugMap));
     const allowedImages = new Set(manifest.images);
 
+    const toDelete = [];
+    const folders = new Set();
+
     function walk(folder) {
         for (const entry of fs.readdirSync(folder)) {
             const full = path.join(folder, entry);
             const rel = path.relative(contentRoot, full).replace(/\\/g, "/");
 
-            if (fs.statSync(full).isDirectory()) {
+            const stat = fs.statSync(full);
+
+            if (stat.isDirectory()) {
+                folders.add(full);
                 walk(full);
-                if (fs.readdirSync(full).length === 0) fs.rmdirSync(full);
                 continue;
             }
 
+            // markdown
             if (rel.endsWith(".md")) {
-                if (!allowedMd.has(rel)) fs.rmSync(full);
+                if (!allowedMd.has(rel)) toDelete.push(full);
                 continue;
             }
 
-            // non-md: keep only allowed images
-            if (!allowedImages.has(rel)) fs.rmSync(full);
+            // image (or any other file)
+            if (!allowedImages.has(rel)) toDelete.push(full);
         }
     }
 
     walk(contentRoot);
+
+    // Phase 2: delete files safely
+    for (const f of toDelete) {
+        try { fs.rmSync(f); } catch { /* ignore */ }
+    }
+
+    // Phase 3: remove empty folders bottom-up
+    [...folders]
+        .sort((a, b) => b.length - a.length) // deeper first
+        .forEach((dir) => {
+            try {
+                if (fs.existsSync(dir) && fs.readdirSync(dir).length === 0) {
+                    fs.rmdirSync(dir);
+                }
+            } catch { /* ignore */ }
+        });
 }
 
 // --------- CLEAN OLD OUTPUT -----------
@@ -83,7 +105,10 @@ clean(DM_ZIP);
 
 // --------- BUILD VITE & EXE ----------
 console.log("[INFO] Building Vite…");
-run("npm run build");
+execSync("npm run build", {
+    stdio: "inherit",
+    shell: true, // needed for Windows
+});
 
 console.log("[INFO] Building executable with Bun…");
 run(`bun build server.js --compile --outfile ${EXE_NAME}`);
