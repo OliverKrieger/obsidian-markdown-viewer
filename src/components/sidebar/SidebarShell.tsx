@@ -1,14 +1,20 @@
-// components/sidebar/SidebarShell.tsx
 import type { ReactNode } from "react";
 
 interface SidebarShellProps {
     open: boolean;
     onClose: () => void;
-    children: ReactNode;
     headerHeight: number;
+    children: ReactNode;
+    searchSlot?: ReactNode;  // ← NEW
 }
 
-export function SidebarShell({ open, onClose, children, headerHeight }: SidebarShellProps) {
+export function SidebarShell({
+    open,
+    onClose,
+    children,
+    headerHeight,
+    searchSlot,
+}: SidebarShellProps) {
     return (
         <>
             {/* Mobile backdrop */}
@@ -32,11 +38,18 @@ export function SidebarShell({ open, onClose, children, headerHeight }: SidebarS
                 style={{
                     top: headerHeight,
                     height: `calc(100vh - ${headerHeight}px)`,
-                    // custom CSS var for reuse inside children
                     ["--header-height" as any]: `${headerHeight}px`,
                 }}
             >
-                <div className="p-4 h-full overflow-y-auto">{children}</div>
+                {/* Header search area (non-scrollable) */}
+                <div className="p-4 border-b border-tertiary-900">
+                    {searchSlot}
+                </div>
+
+                {/* Scrollable document contents */}
+                <div className="p-4 h-[calc(100%-3.5rem)] overflow-y-auto">
+                    {children}
+                </div>
             </aside>
         </>
     );

@@ -3,7 +3,9 @@ import { TbHomeSpark, TbMenu2 } from "react-icons/tb";
 
 import { SidebarShell } from "./sidebar/SidebarShell";
 import { SidebarContent } from "./sidebar/SidebarContent";
+import { SidebarSearch } from "./sidebar/SidebarSearch";
 import { ThemeSwitcher } from "./theme/ThemeSwitcher";
+import { useSlugMap } from "../hooks/useSlugMap";
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -63,6 +65,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 open={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 headerHeight={headerHeight}
+                searchSlot={<SidebarSearch entries={Object.entries(useSlugMap() || {})} />}
             >
                 <SidebarContent />
             </SidebarShell>

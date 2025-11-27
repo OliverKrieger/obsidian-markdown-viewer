@@ -2,7 +2,7 @@ import Fuse from "fuse.js";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
-export function SearchBar({ entries }: { entries: [string, string][] }) {
+export function SidebarSearch({ entries }: { entries: [string, string][] }) {
     const [query, setQuery] = useState("");
 
     const fuse = useMemo(() => {
@@ -15,7 +15,7 @@ export function SearchBar({ entries }: { entries: [string, string][] }) {
     const results = query ? fuse.search(query).map(r => r.item) : [];
 
     return (
-        <div className="mb-4">
+        <div>
             <input
                 className="w-full p-2 rounded bg-tertiary-900/20 text-sm"
                 placeholder="Search…"
