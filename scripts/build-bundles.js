@@ -13,12 +13,11 @@ const PLAYER_ZIP = path.join(__dirname, "../PlayerBundle.zip");
 const DM_ZIP = path.join(__dirname, "../DMBundle.zip");
 const EXE_NAME = "LoreViewer.exe";
 
-// For content trimming
-const DM_FOLDER = process.env.VITE_DM_FOLDER || "DM Section";
+const DIST_SRC = path.join(__dirname, "../dist");
+const CONTENT_SRC = path.join(__dirname, "../public/content");
+const EXE_SRC = path.join(__dirname, "..", EXE_NAME);
 
-// --- Helpers ---
-
-function cleanPath(p) {
+function clean(p) {
     if (fs.existsSync(p)) fs.rmSync(p, { recursive: true });
 }
 
@@ -27,45 +26,28 @@ function run(cmd) {
     execSync(cmd, { stdio: "inherit" });
 }
 
-// --- 1. Clean old builds ---
-
+// --- CLEAN OLD OUTPUTS ---
 console.log("[INFO] Cleaning old bundles...");
-cleanPath(PLAYER_BUNDLE_DIR);
-cleanPath(DM_BUNDLE_DIR);
-cleanPath(PLAYER_ZIP);
-cleanPath(DM_ZIP);
+clean(PLAYER_BUNDLE_DIR);
+clean(DM_BUNDLE_DIR);
+clean(PLAYER_ZIP);
+clean(DM_ZIP);
 
-// --- 2. Build Vite ---
-
+// --- BUILD VITE ---
 console.log("[INFO] Building Vite project...");
 run("npm run build");
 
-// --- 3. Compile EXE with Bun ---
-
+// --- COMPILE EXE ---
 console.log("[INFO] Compiling executable with bun...");
 run(`bun build server.js --compile --outfile ${EXE_NAME}`);
 
-// --- 4. Prepare common paths ---
+if (!fs.existsSync(DIST_SRC)) throw new Error("dist/ missing");
+if (!fs.existsSync(CONTENT_SRC)) throw new Error("public/content missing");
+if (!fs.existsSync(EXE_SRC)) throw new Error("EXE missing");
 
-const DIST_SRC = path.join(__dirname, "../dist");
-const CONTENT_SRC = path.join(__dirname, "../public/content");
-const EXE_SRC = path.join(__dirname, "..", EXE_NAME);
-
-// Sanity checks
-if (!fs.existsSync(DIST_SRC)) {
-    console.error("❌ dist/ folder not found. Did the Vite build succeed?");
-    process.exit(1);
-}
-if (!fs.existsSync(CONTENT_SRC)) {
-    console.error("❌ public/content folder not found. Did you run build-content?");
-    process.exit(1);
-}
-if (!fs.existsSync(EXE_SRC)) {
-    console.error("❌ Executable not found. Did bun build succeed?");
-    process.exit(1);
-}
-
-// --- 5. Build PlayerBundle ---
+// -------------------------------------------------------------
+//  PLAYER BUNDLE  (viewer mode = player)
+// -------------------------------------------------------------
 
 console.log("[INFO] Creating PlayerBundle...");
 
@@ -75,24 +57,22 @@ fs.mkdirSync(PLAYER_BUNDLE_DIR);
 fs.copyFileSync(EXE_SRC, path.join(PLAYER_BUNDLE_DIR, EXE_NAME));
 
 // Copy dist/
-fs.cpSync(DIST_SRC, path.join(PLAYER_BUNDLE_DIR, "dist"), {
-    recursive: true,
-});
+fs.cpSync(DIST_SRC, path.join(PLAYER_BUNDLE_DIR, "dist"), { recursive: true });
 
-// Copy content/ then remove DM folder
+// Copy ALL content (manifest controls visibility)
 fs.cpSync(CONTENT_SRC, path.join(PLAYER_BUNDLE_DIR, "content"), {
     recursive: true,
 });
 
-const playerContentRoot = path.join(PLAYER_BUNDLE_DIR, "content");
-const dmFolderInPlayer = path.join(playerContentRoot, DM_FOLDER);
+// Write viewer mode config
+fs.writeFileSync(
+    path.join(PLAYER_BUNDLE_DIR, "viewer-mode.json"),
+    JSON.stringify({ mode: "player" }, null, 2)
+);
 
-if (fs.existsSync(dmFolderInPlayer)) {
-    console.log(`[INFO] Removing DM folder from PlayerBundle: ${dmFolderInPlayer}`);
-    fs.rmSync(dmFolderInPlayer, { recursive: true });
-}
-
-// --- 6. Build DMBundle ---
+// -------------------------------------------------------------
+//  DM BUNDLE  (viewer mode = dm)
+// -------------------------------------------------------------
 
 console.log("[INFO] Creating DMBundle...");
 
@@ -102,17 +82,22 @@ fs.mkdirSync(DM_BUNDLE_DIR);
 fs.copyFileSync(EXE_SRC, path.join(DM_BUNDLE_DIR, EXE_NAME));
 
 // Copy dist/
-fs.cpSync(DIST_SRC, path.join(DM_BUNDLE_DIR, "dist"), {
-    recursive: true,
-});
+fs.cpSync(DIST_SRC, path.join(DM_BUNDLE_DIR, "dist"), { recursive: true });
 
-// Copy all content (Player + DM)
+// Copy ALL content
 fs.cpSync(CONTENT_SRC, path.join(DM_BUNDLE_DIR, "content"), {
     recursive: true,
 });
 
-// --- 7. Zip both bundles ---
+// Write viewer mode config
+fs.writeFileSync(
+    path.join(DM_BUNDLE_DIR, "viewer-mode.json"),
+    JSON.stringify({ mode: "dm" }, null, 2)
+);
 
+// -------------------------------------------------------------
+//  ZIP BOTH
+// -------------------------------------------------------------
 console.log("[INFO] Zipping PlayerBundle...");
 let zip = new AdmZip();
 zip.addLocalFolder(PLAYER_BUNDLE_DIR, "PlayerBundle");
@@ -123,5 +108,4 @@ zip = new AdmZip();
 zip.addLocalFolder(DM_BUNDLE_DIR, "DMBundle");
 zip.writeZip(DM_ZIP);
 
-console.log("\n[INFO] DONE!");
-console.log(`Created PlayerBundle.zip and DMBundle.zip in project root.`);
+console.log("[INFO] DONE!");

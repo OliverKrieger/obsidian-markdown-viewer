@@ -30,6 +30,8 @@ public/content
 LoreViewer.exe
 PlayerBundle.zip
 PlayerBundle/
+DMBundle.zip
+DMBundle/
 
 # environment files
 .env.production
