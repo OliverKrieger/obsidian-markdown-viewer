@@ -5,6 +5,7 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkWikiLink from "remark-wiki-link";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import type { Components } from "react-markdown";
 
 import { useMarkdown } from "../hooks/useMarkdown";
 import { useManifest } from "../hooks/useManifest";
@@ -16,6 +17,8 @@ import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
 import { renderCallout } from "./markdown/callouts/renderCallout";
 import { remarkObsidianImages } from "./markdown/remark/remarkObsidianImages";
+import { rehypeGridMap } from "./markdown/rehype/rehypeGridMap";
+import { GridMapComponent } from "./markdown/GridMapComponent";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -37,6 +40,39 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
         list.push(rel);
         fileIndex.set(name, list);
     });
+
+    // Build components map and cast once so TS doesn't complain about "grid-map"
+    const baseComponents: Partial<Components> = {
+        a: (props) => <WikiLink {...props} />,
+        hr: Divider,
+        blockquote: ({ node, children }) => {
+            const callout = renderCallout(
+                node,
+                Array.isArray(children) ? children : [children]
+            );
+            if (callout) return callout;
+
+            return (
+                <blockquote
+                    className="my-6 pl-4 border-l-4 italic"
+                    style={{
+                        borderColor: "var(--callout-quote-border)",
+                        background: "var(--callout-quote-bg)",
+                        color: "var(--callout-quote-text)",
+                    }}
+                >
+                    {children}
+                </blockquote>
+            );
+        },
+        ...createTableComponents(),
+        ...createListComponents(),
+        ...createHeadingComponents(),
+    };
+
+    const customComponents: Record<string, unknown> = {
+        "grid-map": GridMapComponent,
+    };
 
     return (
         <article className="max-w-none p-6">
@@ -103,35 +139,14 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                         },
                     ],
                 ]}
-                rehypePlugins={[rehypeSlug, rehypeAutolinkHeadings]}
+                rehypePlugins={[
+                    rehypeSlug,
+                    rehypeAutolinkHeadings,
+                    rehypeGridMap,
+                ]}
                 components={{
-                    a: (props) => <WikiLink {...props} />,
-                    hr: Divider,
-                    blockquote: ({ node, children }) => {
-                        const callout = renderCallout(
-                            node,
-                            Array.isArray(children) ? children : [children]
-                        );
-                        if (callout) return callout;
-
-                        return (
-                            <blockquote
-                                className="my-6 pl-4 border-l-4 italic"
-                                style={{
-                                    borderColor:
-                                        "var(--callout-quote-border)",
-                                    background:
-                                        "var(--callout-quote-bg)",
-                                    color: "var(--callout-quote-text)",
-                                }}
-                            >
-                                {children}
-                            </blockquote>
-                        );
-                    },
-                    ...createTableComponents(),
-                    ...createListComponents(),
-                    ...createHeadingComponents(),
+                    ...baseComponents,
+                    ...customComponents, // TS does NOT validate this part
                 }}
             >
                 {content}
