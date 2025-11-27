@@ -1,6 +1,6 @@
 import { useManifest } from "./useManifest";
 
-export function useSlugMap() {
+export function useAllowedImages(): string[] {
     const manifest = useManifest();
-    return manifest ? manifest.slugMap : null;
+    return manifest?.images ?? [];
 }

@@ -1,3 +1,4 @@
+// scripts/build-bundles.js
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
@@ -7,9 +8,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// =============================
-// PATHS
-// =============================
 const BUNDLES_ROOT = path.join(__dirname, "../bundles");
 
 const PLAYER_BUNDLE_DIR = path.join(BUNDLES_ROOT, "PlayerBundle");
@@ -24,9 +22,6 @@ const DIST_SRC = path.join(__dirname, "../dist");
 const CONTENT_SRC = path.join(__dirname, "../public/content");
 const EXE_SRC = path.join(__dirname, "..", EXE_NAME);
 
-// =============================
-// UTILITIES
-// =============================
 function run(cmd) {
     console.log(`[CMD] ${cmd}`);
     execSync(cmd, { stdio: "inherit" });
@@ -48,9 +43,7 @@ function copy(src, dest) {
     fs.cpSync(src, dest, { recursive: true });
 }
 
-// =============================
-// PRUNING LOGIC
-// =============================
+// Prune content root so only MD + images from manifest remain
 function pruneToManifest(contentRoot, manifestPath) {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     const allowedMd = new Set(Object.values(manifest.slugMap));
@@ -72,6 +65,7 @@ function pruneToManifest(contentRoot, manifestPath) {
                 continue;
             }
 
+            // non-md: keep only allowed images
             if (!allowedImages.has(rel)) fs.rmSync(full);
         }
     }
@@ -79,20 +73,15 @@ function pruneToManifest(contentRoot, manifestPath) {
     walk(contentRoot);
 }
 
-// =============================
-// CLEAN OLD OUTPUT
-// =============================
+// --------- CLEAN OLD OUTPUT -----------
 console.log("[INFO] Cleaning old bundles…");
 ensure(BUNDLES_ROOT);
-
 clean(PLAYER_BUNDLE_DIR);
 clean(DM_BUNDLE_DIR);
 clean(PLAYER_ZIP);
 clean(DM_ZIP);
 
-// =============================
-// BUILD VITE + EXE
-// =============================
+// --------- BUILD VITE & EXE ----------
 console.log("[INFO] Building Vite…");
 run("npm run build");
 
@@ -103,14 +92,11 @@ if (!fs.existsSync(DIST_SRC)) throw new Error("dist missing");
 if (!fs.existsSync(CONTENT_SRC)) throw new Error("public/content missing");
 if (!fs.existsSync(EXE_SRC)) throw new Error("EXE missing");
 
-// =============================
-// PLAYER BUNDLE
-// =============================
+// --------- PLAYER BUNDLE -------------
 console.log("\n[INFO] Creating PlayerBundle…");
 ensure(PLAYER_BUNDLE_DIR);
 
 fs.copyFileSync(EXE_SRC, path.join(PLAYER_BUNDLE_DIR, EXE_NAME));
-
 copy(DIST_SRC, path.join(PLAYER_BUNDLE_DIR, "dist"));
 copy(CONTENT_SRC, path.join(PLAYER_BUNDLE_DIR, "content"));
 
@@ -119,20 +105,17 @@ fs.writeFileSync(
     JSON.stringify({ mode: "player" }, null, 2)
 );
 
-console.log("[INFO] Pruning PlayerBundle content…");
+console.log("[INFO] Pruning PlayerBundle content to player manifest…");
 pruneToManifest(
     path.join(PLAYER_BUNDLE_DIR, "content"),
     path.join(PLAYER_BUNDLE_DIR, "content/player-manifest.json")
 );
 
-// =============================
-// DM BUNDLE
-// =============================
+// --------- DM BUNDLE -----------------
 console.log("\n[INFO] Creating DMBundle…");
 ensure(DM_BUNDLE_DIR);
 
 fs.copyFileSync(EXE_SRC, path.join(DM_BUNDLE_DIR, EXE_NAME));
-
 copy(DIST_SRC, path.join(DM_BUNDLE_DIR, "dist"));
 copy(CONTENT_SRC, path.join(DM_BUNDLE_DIR, "content"));
 
@@ -141,9 +124,7 @@ fs.writeFileSync(
     JSON.stringify({ mode: "dm" }, null, 2)
 );
 
-// =============================
-// ZIP BOTH
-// =============================
+// --------- ZIP BOTH ------------------
 console.log("\n[INFO] Zipping PlayerBundle…");
 let zip = new AdmZip();
 zip.addLocalFolder(PLAYER_BUNDLE_DIR, "PlayerBundle");
@@ -155,4 +136,4 @@ zip.addLocalFolder(DM_BUNDLE_DIR, "DMBundle");
 zip.writeZip(DM_ZIP);
 
 console.log("\n🎉 Bundling complete!");
-console.log(`Bundles are available at: ${BUNDLES_ROOT}`);
+console.log(`Bundles in: ${BUNDLES_ROOT}`);

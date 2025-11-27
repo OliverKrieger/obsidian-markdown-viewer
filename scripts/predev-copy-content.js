@@ -16,7 +16,7 @@ if (!VAULT_PATH) {
 const DEST_ROOT = path.resolve("public/content");
 
 // -------------------------
-// CLEAN CONTENT DIR
+// Clean content dir
 // -------------------------
 if (fs.existsSync(DEST_ROOT)) {
     console.log("[INFO] Cleaning public/content…");
@@ -27,15 +27,10 @@ fs.mkdirSync(DEST_ROOT, { recursive: true });
 // -------------------------
 // Helpers
 // -------------------------
-
 function slugify(name) {
-    return name
-        .replace(/\.md$/i, "")
-        .replace(/_/g, " ")
-        .trim();
+    return name.replace(/\.md$/i, "").replace(/_/g, " ").trim();
 }
 
-// Extract Obsidian wiki links ([[Foo|Alias]], [[Foo#Bar]])
 function extractWikiLinks(markdown) {
     const matches = markdown.match(/\[\[([^\]]+)\]\]/g) || [];
     return matches.map((m) => {
@@ -44,54 +39,52 @@ function extractWikiLinks(markdown) {
     });
 }
 
-// Extract markdown + obsidian images
-function extractImageLinks(markdown) {
-    const results = new Set();
+function extractRawImageTargets(markdown) {
+    const results = [];
 
-    // Markdown images: ![alt](path)
     const mdMatches = markdown.match(/!\[[^\]]*]\(([^)]+)\)/g) || [];
     mdMatches.forEach((m) => {
         const link = m.match(/\(([^)]+)\)/)[1];
-        results.add(link.trim());
+        results.push(link.trim());
     });
 
-    // Obsidian images: ![[image.png]]
     const obsMatches = markdown.match(/!\[\[([^\]]+)\]\]/g) || [];
     obsMatches.forEach((m) => {
-        const inner = m.slice(3, -2); // remove ![[ ]]
+        const inner = m.slice(3, -2);
         const file = inner.split("|")[0];
-        results.add(file.trim());
+        results.push(file.trim());
     });
 
-    return [...results];
+    return results;
 }
 
-// Determine whether file is player-only, dm-only, or global
 function classifyFile(relPath) {
     const norm = relPath.replace(/\\/g, "/");
-
-    if (norm === PLAYER_FOLDER || norm.startsWith(`${PLAYER_FOLDER}/`))
-        return "player";
-
-    if (norm === DM_FOLDER || norm.startsWith(`${DM_FOLDER}/`))
-        return "dm";
-
-    return "global"; // DM-only
+    if (norm === PLAYER_FOLDER || norm.startsWith(`${PLAYER_FOLDER}/`)) return "player";
+    if (norm === DM_FOLDER || norm.startsWith(`${DM_FOLDER}/`)) return "dm";
+    return "global";
 }
 
 // -------------------------
-// Data containers
+// DATA STRUCTURES
 // -------------------------
+const allMarkdownFiles = []; // [{relPath, fullPath}]
+const fileIndex = {};        // filename -> [relPaths]
+
 const slugMapPlayer = {};
 const slugMapDM = {};
+
 const linksFromPlayer = new Set();
 const linksFromDM = new Set();
-const imageRefsForFile = {}; // mdRelPath -> [image paths]
+
+const imageRefsForFile = {}; // mdRelPath -> [imageRelPaths]
 
 // -------------------------
-// Copy + index build
+// PASS 1 — Copy and Index
 // -------------------------
-function walkAndCopy(srcDir, rel = "") {
+console.log(`📁 Copying vault "${VAULT_PATH}" → public/content …`);
+
+function pass1(srcDir, rel = "") {
     const entries = fs.readdirSync(srcDir, { withFileTypes: true });
 
     for (const entry of entries) {
@@ -101,84 +94,122 @@ function walkAndCopy(srcDir, rel = "") {
 
         if (entry.isDirectory()) {
             if (entry.name === ".obsidian") continue;
-
             fs.mkdirSync(destPath, { recursive: true });
-            walkAndCopy(srcPath, relPath);
+            pass1(srcPath, relPath);
             continue;
         }
 
-        // Copy all files (images, PDFs, etc.)
+        // Copy file now
         fs.mkdirSync(path.dirname(destPath), { recursive: true });
         fs.copyFileSync(srcPath, destPath);
 
-        if (!entry.name.toLowerCase().endsWith(".md")) continue;
-
-        // Process markdown
-        const role = classifyFile(relPath);
-        const raw = fs.readFileSync(srcPath, "utf8");
-        const slug = slugify(entry.name);
         const normRel = relPath.replace(/\\/g, "/");
 
-        const wikiLinks = extractWikiLinks(raw);
-        const imageLinks = extractImageLinks(raw);
+        if (entry.name.toLowerCase().endsWith(".md")) {
+            // markdown recorded for pass 2
+            allMarkdownFiles.push({
+                relPath: normRel,
+                fullPath: srcPath,
+            });
+        } else {
+            // index all other files
+            if (!fileIndex[entry.name]) fileIndex[entry.name] = [];
+            fileIndex[entry.name].push(normRel);
+        }
+    }
+}
 
-        imageRefsForFile[normRel] = imageLinks;
+pass1(VAULT_PATH);
 
-        if (role === "player") slugMapPlayer[slug] = normRel;
-        if (role === "player" || role === "dm" || role === "global") {
-            slugMapDM[slug] = normRel;
+// -------------------------
+// PASS 2 — Process Markdown
+// -------------------------
+function resolveImageTargets(mdRelPath, rawTargets) {
+    const mdDir = path.dirname(mdRelPath).replace(/\\/g, "/");
+    const resolved = new Set();
+
+    for (const target of rawTargets) {
+        if (!target || target.startsWith("http://") || target.startsWith("https://"))
+            continue;
+
+        let cleaned = target.replace(/^\.\//, "").replace(/^\/+/, "");
+        let candidateRel;
+
+        if (cleaned.includes("/")) {
+            candidateRel = path
+                .normalize(path.join(mdDir, cleaned))
+                .replace(/\\/g, "/");
+        } else {
+            const candidates = fileIndex[cleaned] || [];
+            if (candidates.length === 1) {
+                candidateRel = candidates[0];
+            } else if (candidates.length > 1) {
+                const sameDir = candidates.find((c) => c.startsWith(mdDir));
+                candidateRel = sameDir || candidates[0];
+            } else {
+                continue;
+            }
         }
 
-        // Track link references
-        if (role === "player") wikiLinks.forEach((l) => linksFromPlayer.add(l));
-        wikiLinks.forEach((l) => linksFromDM.add(l));
+        resolved.add(candidateRel);
     }
+
+    return [...resolved];
+}
+
+console.log("[INFO] Processing markdown for links + embeds…");
+
+for (const { relPath, fullPath } of allMarkdownFiles) {
+    const role = classifyFile(relPath);
+    const content = fs.readFileSync(fullPath, "utf8");
+    const slug = slugify(path.basename(relPath));
+
+    const wikiLinks = extractWikiLinks(content);
+    const rawImages = extractRawImageTargets(content);
+    const resolvedImages = resolveImageTargets(relPath, rawImages);
+
+    imageRefsForFile[relPath] = resolvedImages;
+
+    if (role === "player") slugMapPlayer[slug] = relPath;
+    slugMapDM[slug] = relPath;
+
+    if (role === "player") {
+        wikiLinks.forEach((l) => linksFromPlayer.add(l));
+    }
+    wikiLinks.forEach((l) => linksFromDM.add(l));
 }
 
 // -------------------------
-// Run copy
+// Missing Pages
 // -------------------------
-console.log(`📁 Copying vault "${VAULT_PATH}" → public/content …`);
-walkAndCopy(VAULT_PATH);
+const existingPlayer = new Set(Object.keys(slugMapPlayer));
+const existingDM = new Set(Object.keys(slugMapDM));
+
+const missingPlayer = [...linksFromPlayer].filter((slug) => !existingPlayer.has(slug)).sort();
+const missingDM = [...linksFromDM].filter((slug) => !existingDM.has(slug)).sort();
 
 // -------------------------
-// Determine missing links
+// Collect Images Used
 // -------------------------
-const playerExisting = new Set(Object.keys(slugMapPlayer));
-const dmExisting = new Set(Object.keys(slugMapDM));
-
-const missingPlayer = [...linksFromPlayer]
-    .filter((slug) => !playerExisting.has(slug))
-    .sort();
-
-const missingDM = [...linksFromDM]
-    .filter((slug) => !dmExisting.has(slug))
-    .sort();
-
-// -------------------------
-// Build image lists for manifest
-// -------------------------
-function collectImagesForManifest(slugMap) {
-    const allowed = new Set();
-    for (const mdRel of Object.values(slugMap)) {
-        const imgs = imageRefsForFile[mdRel] || [];
-        imgs.forEach((imgPath) => allowed.add(imgPath));
+function collectImages(slugMap) {
+    const set = new Set();
+    for (const relPath of Object.values(slugMap)) {
+        (imageRefsForFile[relPath] || []).forEach((i) => set.add(i));
     }
-    return [...allowed];
+    return [...set];
 }
 
-const playerImages = collectImagesForManifest(slugMapPlayer);
-const dmImages = collectImagesForManifest(slugMapDM);
+const playerImages = collectImages(slugMapPlayer);
+const dmImages = collectImages(slugMapDM);
 
 // -------------------------
-// Write manifests
+// Write Manifests
 // -------------------------
 fs.writeFileSync(
     path.join(DEST_ROOT, "player-manifest.json"),
     JSON.stringify(
         {
             mode: "player",
-            playerFolder: PLAYER_FOLDER,
             slugMap: slugMapPlayer,
             images: playerImages,
             missing: missingPlayer,
@@ -193,8 +224,6 @@ fs.writeFileSync(
     JSON.stringify(
         {
             mode: "dm",
-            playerFolder: PLAYER_FOLDER,
-            dmFolder: DM_FOLDER,
             slugMap: slugMapDM,
             images: dmImages,
             missing: missingDM,

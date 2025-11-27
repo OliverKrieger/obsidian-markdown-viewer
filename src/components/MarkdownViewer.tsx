@@ -1,3 +1,4 @@
+// src/components/MarkdownViewer.tsx
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkFrontmatter from "remark-frontmatter";
@@ -6,7 +7,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 
 import { useMarkdown } from "../hooks/useMarkdown";
-import { useSlugMap } from "../hooks/useSlugMap";
+import { useManifest } from "../hooks/useManifest";
 
 import { WikiLink } from "./markdown/WikiLink";
 import { createTableComponents } from "./markdown/TableComponents";
@@ -18,11 +19,24 @@ import { remarkObsidianImages } from "./markdown/remark/remarkObsidianImages";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
-    const slugMap = useSlugMap();
+    const manifest = useManifest();
 
-    if (!slugMap) return <div className="p-6">Loading index…</div>;
+    if (!manifest) return <div className="p-6">Loading index…</div>;
     if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
     if (!content) return <div className="p-6">Loading…</div>;
+
+    // path like: /content/DM Section/Valewryn Arc/.../File.md
+    const relPath = path.replace(/^\/?content\/?/, "");
+    const mdDir = relPath.split("/").slice(0, -1).join("/");
+
+    const allowedImages = new Set(manifest.images || []);
+    const fileIndex = new Map<string, string[]>();
+    (manifest.images || []).forEach((rel) => {
+        const name = rel.split("/").pop()!;
+        const list = fileIndex.get(name) || [];
+        list.push(rel);
+        fileIndex.set(name, list);
+    });
 
     return (
         <article className="max-w-none p-6">
@@ -30,7 +44,14 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 remarkPlugins={[
                     remarkGfm,
                     remarkFrontmatter,
-                    remarkObsidianImages,
+                    [
+                        remarkObsidianImages as any,
+                        {
+                            mdDir,
+                            allowedImages,
+                            fileIndex,
+                        },
+                    ],
                     [
                         remarkWikiLink,
                         {
@@ -40,8 +61,10 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                                     .replace(/\\\]/g, "]")
                                     .replace(/\\\[/g, "[");
 
-                                const [pathWithSection] = unescaped.split("|");
-                                const [pageName] = pathWithSection.split("#");
+                                const [pathWithSection] =
+                                    unescaped.split("|");
+                                const [pageName] =
+                                    pathWithSection.split("#");
 
                                 return [
                                     pageName
@@ -50,10 +73,10 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                                 ];
                             },
                             hrefTemplate: (rawSlug: string) => {
-                                if (!slugMap) return "#";
-
-                                const [pagePart, section] = rawSlug.split("#");
-                                const realPath = slugMap[pagePart];
+                                const [pagePart, section] =
+                                    rawSlug.split("#");
+                                const realPath =
+                                    manifest.slugMap[pagePart];
 
                                 if (!realPath) {
                                     return `/__missing__/${encodeURIComponent(
@@ -73,7 +96,9 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                                     )}#${fragment}`;
                                 }
 
-                                return `/page/${encodeURIComponent(pagePart)}`;
+                                return `/page/${encodeURIComponent(
+                                    pagePart
+                                )}`;
                             },
                         },
                     ],
