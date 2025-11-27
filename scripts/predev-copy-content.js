@@ -15,69 +15,82 @@ if (!VAULT_PATH) {
 
 const DEST_ROOT = path.resolve("public/content");
 
-// --- CLEAN PUBLIC/CONTENT ---
+// -------------------------
+// CLEAN CONTENT DIR
+// -------------------------
 if (fs.existsSync(DEST_ROOT)) {
-    console.log("[INFO] Cleaning public/content...");
+    console.log("[INFO] Cleaning public/content…");
     fs.rmSync(DEST_ROOT, { recursive: true });
 }
 fs.mkdirSync(DEST_ROOT, { recursive: true });
 
-// --- Utilities ---
+// -------------------------
+// Helpers
+// -------------------------
 
 function slugify(name) {
     return name
-        .replace(/\.md$/i, "") // remove extension
-        .replace(/_/g, " ")    // 01_Regions -> 01 Regions
+        .replace(/\.md$/i, "")
+        .replace(/_/g, " ")
         .trim();
 }
 
-/**
- * Extract Obsidian-style wiki links: [[Page]], [[Page#Section]], [[Page|Alias]]
- */
+// Extract Obsidian wiki links ([[Foo|Alias]], [[Foo#Bar]])
 function extractWikiLinks(markdown) {
     const matches = markdown.match(/\[\[([^\]]+)\]\]/g) || [];
-    return matches.map((link) => {
-        const inner = link.slice(2, -2); // strip [[ ]]
-        // Page part = before | and before #
+    return matches.map((m) => {
+        const inner = m.slice(2, -2);
         return inner.split("|")[0].split("#")[0].trim();
     });
 }
 
-/**
- * Determine which "mode" a file belongs to based on its relative path:
- * - "player": under Player Section
- * - "dm": under DM Section
- * - "global": everywhere else (DM can see, Player cannot)
- */
+// Extract markdown + obsidian images
+function extractImageLinks(markdown) {
+    const results = new Set();
+
+    // Markdown images: ![alt](path)
+    const mdMatches = markdown.match(/!\[[^\]]*]\(([^)]+)\)/g) || [];
+    mdMatches.forEach((m) => {
+        const link = m.match(/\(([^)]+)\)/)[1];
+        results.add(link.trim());
+    });
+
+    // Obsidian images: ![[image.png]]
+    const obsMatches = markdown.match(/!\[\[([^\]]+)\]\]/g) || [];
+    obsMatches.forEach((m) => {
+        const inner = m.slice(3, -2); // remove ![[ ]]
+        const file = inner.split("|")[0];
+        results.add(file.trim());
+    });
+
+    return [...results];
+}
+
+// Determine whether file is player-only, dm-only, or global
 function classifyFile(relPath) {
     const norm = relPath.replace(/\\/g, "/");
 
-    if (
-        norm === PLAYER_FOLDER ||
-        norm.startsWith(`${PLAYER_FOLDER}/`)
-    ) {
+    if (norm === PLAYER_FOLDER || norm.startsWith(`${PLAYER_FOLDER}/`))
         return "player";
-    }
 
-    if (
-        norm === DM_FOLDER ||
-        norm.startsWith(`${DM_FOLDER}/`)
-    ) {
+    if (norm === DM_FOLDER || norm.startsWith(`${DM_FOLDER}/`))
         return "dm";
-    }
 
-    return "global"; // DM only
+    return "global"; // DM-only
 }
 
-// --- Data structures ---
-
-const slugMapPlayer = {};        // slug -> relPath (Player-only)
-const slugMapDM = {};            // slug -> relPath (DM sees all)
+// -------------------------
+// Data containers
+// -------------------------
+const slugMapPlayer = {};
+const slugMapDM = {};
 const linksFromPlayer = new Set();
 const linksFromDM = new Set();
+const imageRefsForFile = {}; // mdRelPath -> [image paths]
 
-// --- Main walker ---
-
+// -------------------------
+// Copy + index build
+// -------------------------
 function walkAndCopy(srcDir, rel = "") {
     const entries = fs.readdirSync(srcDir, { withFileTypes: true });
 
@@ -87,54 +100,50 @@ function walkAndCopy(srcDir, rel = "") {
         const destPath = path.join(DEST_ROOT, relPath);
 
         if (entry.isDirectory()) {
-            if (entry.name === ".obsidian") continue; // skip vault metadata
+            if (entry.name === ".obsidian") continue;
 
             fs.mkdirSync(destPath, { recursive: true });
             walkAndCopy(srcPath, relPath);
             continue;
         }
 
-        // Always copy non-directory files (images, etc.)
+        // Copy all files (images, PDFs, etc.)
         fs.mkdirSync(path.dirname(destPath), { recursive: true });
         fs.copyFileSync(srcPath, destPath);
 
-        // Process markdown files for slug/missing-link logic
         if (!entry.name.toLowerCase().endsWith(".md")) continue;
 
+        // Process markdown
         const role = classifyFile(relPath);
-        const content = fs.readFileSync(srcPath, "utf8");
+        const raw = fs.readFileSync(srcPath, "utf8");
         const slug = slugify(entry.name);
-        const relPathNormalized = relPath.replace(/\\/g, "/");
-        const links = extractWikiLinks(content);
+        const normRel = relPath.replace(/\\/g, "/");
 
-        // PLAYER SLUG MAP – only files under Player folder
-        if (role === "player") {
-            slugMapPlayer[slug] = relPathNormalized;
-        }
+        const wikiLinks = extractWikiLinks(raw);
+        const imageLinks = extractImageLinks(raw);
 
-        // DM SLUG MAP – all md files visible (player + dm + global)
+        imageRefsForFile[normRel] = imageLinks;
+
+        if (role === "player") slugMapPlayer[slug] = normRel;
         if (role === "player" || role === "dm" || role === "global") {
-            slugMapDM[slug] = relPathNormalized;
+            slugMapDM[slug] = normRel;
         }
 
-        // LINKS – who references what?
-        if (role === "player") {
-            links.forEach((l) => linksFromPlayer.add(l));
-        }
-        if (role === "player" || role === "dm" || role === "global") {
-            links.forEach((l) => linksFromDM.add(l));
-        }
+        // Track link references
+        if (role === "player") wikiLinks.forEach((l) => linksFromPlayer.add(l));
+        wikiLinks.forEach((l) => linksFromDM.add(l));
     }
 }
 
-// --- Run ---
-
-console.log(`📁 Copying vault from ${VAULT_PATH} to ${DEST_ROOT}...`);
-fs.mkdirSync(DEST_ROOT, { recursive: true });
+// -------------------------
+// Run copy
+// -------------------------
+console.log(`📁 Copying vault "${VAULT_PATH}" → public/content …`);
 walkAndCopy(VAULT_PATH);
 
-// --- Build missing link lists ---
-
+// -------------------------
+// Determine missing links
+// -------------------------
 const playerExisting = new Set(Object.keys(slugMapPlayer));
 const dmExisting = new Set(Object.keys(slugMapDM));
 
@@ -146,35 +155,59 @@ const missingDM = [...linksFromDM]
     .filter((slug) => !dmExisting.has(slug))
     .sort();
 
-// --- Write manifests ---
+// -------------------------
+// Build image lists for manifest
+// -------------------------
+function collectImagesForManifest(slugMap) {
+    const allowed = new Set();
+    for (const mdRel of Object.values(slugMap)) {
+        const imgs = imageRefsForFile[mdRel] || [];
+        imgs.forEach((imgPath) => allowed.add(imgPath));
+    }
+    return [...allowed];
+}
 
-const playerManifest = {
-    mode: "player",
-    playerFolder: PLAYER_FOLDER,
-    slugMap: slugMapPlayer,
-    missing: missingPlayer,
-};
+const playerImages = collectImagesForManifest(slugMapPlayer);
+const dmImages = collectImagesForManifest(slugMapDM);
 
-const dmManifest = {
-    mode: "dm",
-    playerFolder: PLAYER_FOLDER,
-    dmFolder: DM_FOLDER,
-    slugMap: slugMapDM,
-    missing: missingDM,
-};
-
+// -------------------------
+// Write manifests
+// -------------------------
 fs.writeFileSync(
     path.join(DEST_ROOT, "player-manifest.json"),
-    JSON.stringify(playerManifest, null, 2)
+    JSON.stringify(
+        {
+            mode: "player",
+            playerFolder: PLAYER_FOLDER,
+            slugMap: slugMapPlayer,
+            images: playerImages,
+            missing: missingPlayer,
+        },
+        null,
+        2
+    )
 );
 
 fs.writeFileSync(
     path.join(DEST_ROOT, "dm-manifest.json"),
-    JSON.stringify(dmManifest, null, 2)
+    JSON.stringify(
+        {
+            mode: "dm",
+            playerFolder: PLAYER_FOLDER,
+            dmFolder: DM_FOLDER,
+            slugMap: slugMapDM,
+            images: dmImages,
+            missing: missingDM,
+        },
+        null,
+        2
+    )
 );
 
 console.log("✅ Content build complete.");
-console.log(`   Player slugs:  ${Object.keys(slugMapPlayer).length}`);
-console.log(`   DM slugs:      ${Object.keys(slugMapDM).length}`);
-console.log(`   Player missing: ${missingPlayer.length}`);
-console.log(`   DM missing:     ${missingDM.length}`);
+console.log(`   Player pages:  ${Object.keys(slugMapPlayer).length}`);
+console.log(`   DM pages:      ${Object.keys(slugMapDM).length}`);
+console.log(`   Player images: ${playerImages.length}`);
+console.log(`   DM images:     ${dmImages.length}`);
+console.log(`   Missing (Player): ${missingPlayer.length}`);
+console.log(`   Missing (DM):     ${missingDM.length}`);

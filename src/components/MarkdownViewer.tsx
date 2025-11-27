@@ -14,6 +14,7 @@ import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
 import { renderCallout } from "./markdown/callouts/renderCallout";
+import { remarkObsidianImages } from "./markdown/remark/remarkObsidianImages";
 
 export const MarkdownViewer = ({ path }: { path: string }) => {
     const { content, error } = useMarkdown(path);
@@ -29,6 +30,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 remarkPlugins={[
                     remarkGfm,
                     remarkFrontmatter,
+                    remarkObsidianImages,
                     [
                         remarkWikiLink,
                         {
