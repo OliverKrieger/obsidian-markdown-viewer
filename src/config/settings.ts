@@ -1,4 +1,9 @@
+import type { ViewerMode } from "../types/viewer";
+
 export const settings = {
-    contentRoot: '/content/Player',
-    defaultPage: '00_World_Overview.md',
+    contentRoot: '/content',
+    defaultPageByMode: {
+        player: "00 World Overview",
+        dm: "00 Overview Dashboard",
+    } as Record<ViewerMode, string>
 };
