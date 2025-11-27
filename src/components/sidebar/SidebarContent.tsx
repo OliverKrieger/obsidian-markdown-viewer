@@ -2,132 +2,89 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useSlugMap } from "../../hooks/useSlugMap";
 import { useMode } from "../../hooks/useMode";
+import { useCurrentSlug } from "../../utils/useCurrentSlug";
+import { buildFolderTree } from "../../utils/buildFolderTree";
+import type { TreeNode } from "../../utils/buildFolderTree";
 
 import { FaBook, FaChevronDown, FaChevronRight } from "react-icons/fa";
 
 export function SidebarContent() {
     const slugMap = useSlugMap();
     const mode = useMode();
+    const currentSlug = useCurrentSlug();
 
-    // Hooks MUST come before any conditional returns
-    const [openPlayer, setOpenPlayer] = useState(true);
-    const [openDM, setOpenDM] = useState(true);
-    const [openGlobal, setOpenGlobal] = useState(false);
-
-    // Now we can safely check loading state
     if (!slugMap) return <div>Loading…</div>;
 
-    // entries: [slug, path]
     const entries = Object.entries(slugMap);
-
-    const playerPages = entries.filter(([_, path]) =>
-        path.startsWith("Player Section/")
-    );
-
-    const dmPages = entries.filter(([_, path]) =>
-        path.startsWith("DM Section/")
-    );
-
-    const globalPages = entries.filter(
-        ([_, path]) =>
-            !path.startsWith("Player Section/") &&
-            !path.startsWith("DM Section/")
-    );
+    const tree = buildFolderTree(entries);
 
     return (
         <>
             <h2 className="text-xl font-bold mb-4">Contents</h2>
 
-            {/* PLAYER SECTION */}
-            {playerPages.length > 0 && (
-                <Section
-                    title="Player Section"
-                    open={openPlayer}
-                    onToggle={() => setOpenPlayer(!openPlayer)}
-                >
-                    {playerPages.map(([slug]) => (
-                        <LinkItem
-                            key={slug}
-                            to={`/page/${encodeURIComponent(slug)}`}
-                            icon={<FaBook className="text-blue-300 opacity-80" />}
-                            label={slug}
-                        />
-                    ))}
-                </Section>
-            )}
-
-            {/* DM SECTION — only shown in DM mode */}
-            {mode === "dm" && dmPages.length > 0 && (
-                <Section
-                    title="DM Section"
-                    open={openDM}
-                    onToggle={() => setOpenDM(!openDM)}
-                >
-                    {dmPages.map(([slug]) => (
-                        <LinkItem
-                            key={slug}
-                            to={`/page/${encodeURIComponent(slug)}`}
-                            icon={<FaBook className="text-yellow-300 opacity-80" />}
-                            label={slug}
-                        />
-                    ))}
-                </Section>
-            )}
-
-            {/* GLOBAL FILES — DM only */}
-            {mode === "dm" && globalPages.length > 0 && (
-                <Section
-                    title="Uncategorized"
-                    open={openGlobal}
-                    onToggle={() => setOpenGlobal(!openGlobal)}
-                >
-                    {globalPages.map(([slug]) => (
-                        <LinkItem
-                            key={slug}
-                            to={`/page/${encodeURIComponent(slug)}`}
-                            icon={<FaBook className="text-gray-300 opacity-80" />}
-                            label={slug}
-                        />
-                    ))}
-                </Section>
-            )}
+            {tree.map((node) => (
+                <FolderNode
+                    key={node.name}
+                    node={node}
+                    mode={mode}
+                    currentSlug={currentSlug}
+                />
+            ))}
         </>
     );
 }
 
-/* Supporting components stay the same */
+/* Recursive folder viewer */
+function FolderNode({
+    node,
+    mode,
+    currentSlug
+}: {
+    node: TreeNode;
+    mode: "player" | "dm";
+    currentSlug: string | null;
+}) {
+    // hide DM section in player mode
+    if (mode === "player" && node.name === "DM Section") return null;
 
-function Section({ title, open, onToggle, children }: any) {
+    const [open, setOpen] = useState(true);
+
     return (
-        <div className="mb-5">
+        <div className="mb-2">
             <button
-                onClick={onToggle}
-                className="flex items-center justify-between w-full text-left mb-2"
+                onClick={() => setOpen(!open)}
+                className="flex items-center justify-between w-full text-left"
             >
-                <span className="text-sm font-semibold opacity-70">
-                    {title}
-                </span>
+                <span className="text-sm font-semibold opacity-70">{node.name}</span>
                 {open ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
             </button>
 
-            <div
-                className={`transition-all overflow-hidden ${
-                    open ? "max-h-full" : "max-h-0"
-                }`}
-            >
-                <ul className="space-y-1 pl-2">{children}</ul>
-            </div>
-        </div>
-    );
-}
+            {open && (
+                <ul className="pl-3 mt-1 space-y-1">
+                    {node.files.map((slug) => (
+                        <li key={slug}>
+                            <Link
+                                to={`/page/${encodeURIComponent(slug)}`}
+                                className={`flex items-center gap-2
+                                    hover:text-blue-300
+                                    ${currentSlug === slug ? "text-blue-400 font-bold" : ""}`}
+                            >
+                                <FaBook className="opacity-80" />
+                                {slug}
+                            </Link>
+                        </li>
+                    ))}
 
-function LinkItem({ to, icon, label }: any) {
-    return (
-        <li>
-            <Link to={to} className="flex items-center gap-2 hover:text-blue-400">
-                {icon}
-                {label}
-            </Link>
-        </li>
+                    {node.folders.map((sub) => (
+                        <FolderNode
+                            key={sub.name}
+                            node={sub}
+                            mode={mode}
+                            currentSlug={currentSlug}
+                        />
+                    ))}
+                </ul>
+            )}
+        </div>
     );
 }
