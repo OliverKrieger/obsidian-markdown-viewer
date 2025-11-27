@@ -7,10 +7,15 @@ import AdmZip from "adm-zip";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PLAYER_BUNDLE_DIR = path.join(__dirname, "../PlayerBundle");
-const DM_BUNDLE_DIR = path.join(__dirname, "../DMBundle");
-const PLAYER_ZIP = path.join(__dirname, "../PlayerBundle.zip");
-const DM_ZIP = path.join(__dirname, "../DMBundle.zip");
+// Root bundles directory
+const BUNDLES_ROOT = path.join(__dirname, "../bundles");
+
+// Output folders + zip paths
+const PLAYER_BUNDLE_DIR = path.join(BUNDLES_ROOT, "PlayerBundle");
+const DM_BUNDLE_DIR = path.join(BUNDLES_ROOT, "DMBundle");
+const PLAYER_ZIP = path.join(BUNDLES_ROOT, "PlayerBundle.zip");
+const DM_ZIP = path.join(BUNDLES_ROOT, "DMBundle.zip");
+
 const EXE_NAME = "LoreViewer.exe";
 
 const DIST_SRC = path.join(__dirname, "../dist");
@@ -24,6 +29,11 @@ function clean(p) {
 function run(cmd) {
     console.log(`[CMD] ${cmd}`);
     execSync(cmd, { stdio: "inherit" });
+}
+
+// --- ENSURE bundles/ folder exists ---
+if (!fs.existsSync(BUNDLES_ROOT)) {
+    fs.mkdirSync(BUNDLES_ROOT);
 }
 
 // --- CLEAN OLD OUTPUTS ---
@@ -48,7 +58,6 @@ if (!fs.existsSync(EXE_SRC)) throw new Error("EXE missing");
 // -------------------------------------------------------------
 //  PLAYER BUNDLE  (viewer mode = player)
 // -------------------------------------------------------------
-
 console.log("[INFO] Creating PlayerBundle...");
 
 fs.mkdirSync(PLAYER_BUNDLE_DIR);
@@ -59,21 +68,20 @@ fs.copyFileSync(EXE_SRC, path.join(PLAYER_BUNDLE_DIR, EXE_NAME));
 // Copy dist/
 fs.cpSync(DIST_SRC, path.join(PLAYER_BUNDLE_DIR, "dist"), { recursive: true });
 
-// Copy ALL content (manifest controls visibility)
+// Copy ALL content (visibility handled via manifests)
 fs.cpSync(CONTENT_SRC, path.join(PLAYER_BUNDLE_DIR, "content"), {
     recursive: true,
 });
 
 // Write viewer mode config
 fs.writeFileSync(
-    path.join(PLAYER_BUNDLE_DIR, "viewer-mode.json"),
+    path.join(PLAYER_BUNDLE_DIR, "dist", "viewer-mode.json"),
     JSON.stringify({ mode: "player" }, null, 2)
 );
 
 // -------------------------------------------------------------
 //  DM BUNDLE  (viewer mode = dm)
 // -------------------------------------------------------------
-
 console.log("[INFO] Creating DMBundle...");
 
 fs.mkdirSync(DM_BUNDLE_DIR);
@@ -91,7 +99,7 @@ fs.cpSync(CONTENT_SRC, path.join(DM_BUNDLE_DIR, "content"), {
 
 // Write viewer mode config
 fs.writeFileSync(
-    path.join(DM_BUNDLE_DIR, "viewer-mode.json"),
+    path.join(DM_BUNDLE_DIR, "dist", "viewer-mode.json"),
     JSON.stringify({ mode: "dm" }, null, 2)
 );
 
@@ -108,4 +116,5 @@ zip = new AdmZip();
 zip.addLocalFolder(DM_BUNDLE_DIR, "DMBundle");
 zip.writeZip(DM_ZIP);
 
-console.log("[INFO] DONE!");
+console.log("\n[INFO] DONE!");
+console.log(`Bundles stored in: ${BUNDLES_ROOT}`);

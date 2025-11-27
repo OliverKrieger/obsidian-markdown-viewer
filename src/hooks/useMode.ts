@@ -1,7 +1,18 @@
+import { useEffect } from "react";
 import { useViewerModeStore } from "../store/viewerMode";
 
 export function useMode() {
-    return useViewerModeStore((s) => s.mode);
+    const mode = useViewerModeStore((s) => s.mode);
+    const hydrated = useViewerModeStore((s) => s.hydrated);
+    const hydrate = useViewerModeStore((s) => s.hydrateFromFile);
+
+    useEffect(() => {
+        if (!hydrated) {
+            hydrate();
+        }
+    }, [hydrated]);
+
+    return mode;
 }
 
 export function useSetMode() {
