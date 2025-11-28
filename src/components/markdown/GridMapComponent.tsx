@@ -114,7 +114,7 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
 
     if (!map || rows === 0 || cols === 0) {
         return (
-            <section className="my-6 p-4 rounded border bg-slate-50">
+            <section className="my-6 p-4 rounded border">
                 {title && (
                     <h3 className="font-bold text-lg mb-2">{title}</h3>
                 )}
@@ -135,7 +135,7 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
     });
 
     return (
-        <section className="my-6 p-4 rounded border bg-slate-50">
+        <section className="my-6 p-4 rounded border">
             {title && (
                 <h3 className="font-bold text-lg mb-4">
                     {title}
