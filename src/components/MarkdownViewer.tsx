@@ -146,7 +146,7 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
                 ]}
                 components={{
                     ...baseComponents,
-                    ...customComponents, // TS does NOT validate this part
+                    ...customComponents,
                 }}
             >
                 {content}
