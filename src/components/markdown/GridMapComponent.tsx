@@ -48,7 +48,12 @@ function generateLabel(
             return numberToLetters(row) + numberToLetters(col);
 
         case "numbers-letters":
+            // numbers on columns, letters on rows → e.g. 1A, 2A, 3A
             return String(col + 1) + numberToLetters(row);
+
+        case "letter-number-rowcol":
+            // Row letters, column numbers → A1, A2, A3
+            return numberToLetters(row) + (col + 1);
 
         case "letters-numbers":
         default:
