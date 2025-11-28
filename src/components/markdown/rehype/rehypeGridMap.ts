@@ -1,9 +1,6 @@
+// src/components/markdown/rehype/rehypeGridMap.ts
 import { visit } from "unist-util-visit";
 import type { Root, Element, Text } from "hast";
-
-function isElement(node: any): node is Element {
-    return node && node.type === "element";
-}
 
 function textFrom(node: Element): string {
     return (node.children || [])
@@ -15,85 +12,87 @@ function textFrom(node: Element): string {
         .join("");
 }
 
+function isElement(node: any): node is Element {
+    return node && node.type === "element";
+}
+
 export function rehypeGridMap() {
     return (tree: Root) => {
         visit(tree, "element", (node: Element, index, parent) => {
             if (!parent || typeof index !== "number") return;
             if (node.tagName !== "blockquote") return;
 
-            //
-            // 1. Find the "[!grid-map]" paragraph
-            //
+            // 1. Find the `[!grid-map]` marker paragraph
             const triggerIndex = node.children.findIndex((child: any) => {
                 return (
-                    child.type === "element" &&
+                    isElement(child) &&
                     child.tagName === "p" &&
                     textFrom(child).trim() === "[!grid-map]"
                 );
             });
+
             if (triggerIndex === -1) return;
 
-            // Everything after this paragraph is content
             const contentNodes = node.children.slice(triggerIndex + 1);
 
-            //
-            // Prepare props
-            //
             let title = "";
             let map = "";
             let rows: number | undefined = undefined;
             let cols: number | undefined = undefined;
             let prefix = "";
+            let labelStyle = "letters-numbers";
             const cells: string[] = [];
 
-            //
-            // 2. Parse content nodes
-            //
             for (const child of contentNodes) {
-                if (child.type !== "element") continue;
+                if (!isElement(child)) continue;
                 const el = child as Element;
 
-                //
-                // 2a. MAIN PROPS ARE INSIDE THE *BIG PARAGRAPH*
-                //
+                // Main paragraph containing title, map, rows, cols, prefix, labelStyle
                 if (el.tagName === "p") {
-                    // Extract all text content and split by newlines
                     const fullText = textFrom(el);
                     const lines = fullText
                         .split(/\r?\n/)
                         .map((l) => l.trim())
                         .filter((l) => l.length > 0);
 
-                    // Look for <img> child for the map
+                    // Find <img> child -> resolved src from Obsidian images
                     const imgChild = (el.children || []).find(
                         (c: any) => isElement(c) && c.tagName === "img"
                     );
-
                     if (imgChild && isElement(imgChild)) {
-                        const src = imgChild.properties?.src as string | undefined;
-                        if (src) map = src;
+                        const src = imgChild.properties?.src as
+                            | string
+                            | undefined;
+                        if (src) {
+                            map = src; // keep resolved path
+                        }
                     }
 
-                    // First non-meta line is title
                     if (!title && lines.length > 0) {
                         title = lines[0];
                     }
 
-                    // Parse other lines
                     for (const line of lines) {
                         if (/^map:/i.test(line)) {
-                            // handled above via <img>
+                            // handled via <img>
+                            continue;
                         } else if (/^rows:/i.test(line)) {
-                            rows = Number(
+                            const num = Number(
                                 line.replace(/rows:/i, "").trim()
                             );
+                            if (!Number.isNaN(num)) rows = num;
                         } else if (/^cols:/i.test(line)) {
-                            cols = Number(
+                            const num = Number(
                                 line.replace(/cols:/i, "").trim()
                             );
+                            if (!Number.isNaN(num)) cols = num;
                         } else if (/^prefix:/i.test(line)) {
                             prefix = line
                                 .replace(/prefix:/i, "")
+                                .trim();
+                        } else if (/^labelStyle:/i.test(line)) {
+                            labelStyle = line
+                                .replace(/labelStyle:/i, "")
                                 .trim();
                         }
                     }
@@ -101,23 +100,16 @@ export function rehypeGridMap() {
                     continue;
                 }
 
-                //
-                // 2b. Ignore <h1>Cells</h1> etc (they are section headers)
-                //
+                // Ignore section headings like "# Cells"
                 if (/^h[1-6]$/.test(el.tagName)) {
                     continue;
                 }
 
-                //
-                // 2c. Parse the <ul> list of cells
-                //
-                if (el.tagName === "ul") {
+                // List of cells
+                if (el.tagName === "ul" || el.tagName === "ol") {
                     for (const li of el.children) {
-                        if (
-                            li.type === "element" &&
-                            li.tagName === "li"
-                        ) {
-                            const value = textFrom(li as Element).trim();
+                        if (isElement(li) && li.tagName === "li") {
+                            const value = textFrom(li).trim();
                             if (value) cells.push(value);
                         }
                     }
@@ -125,9 +117,6 @@ export function rehypeGridMap() {
                 }
             }
 
-            //
-            // 3. Replace blockquote with <grid-map>
-            //
             parent.children[index] = {
                 type: "element",
                 tagName: "grid-map",
@@ -137,6 +126,7 @@ export function rehypeGridMap() {
                     rows,
                     cols,
                     prefix,
+                    labelStyle,
                     cells,
                 },
                 children: [],
