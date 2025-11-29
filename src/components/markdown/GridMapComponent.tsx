@@ -30,7 +30,7 @@ function numberToLetters(num: number): string {
 /** Generate a label for a grid cell (A1, B3, AA22, etc.) */
 function generateLabel(
     index: number,
-    rows: number,
+    _: number,// rows (unused)
     cols: number,
     style: string
 ): string {
