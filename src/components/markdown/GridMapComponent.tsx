@@ -71,7 +71,7 @@ function normaliseCells(cells: unknown): string[] {
     }
     if (typeof cells === "string") {
         return cells
-            .split(/[\n,]/)
+            .split(/[\s,]+/)
             .map((c) => c.trim())
             .filter(Boolean);
     }
@@ -177,7 +177,7 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
                             "border border-black/20",
                             "pointer-events-auto",
                             isHighlighted
-                                ? "bg-yellow-300/40"
+                                ? "bg-secondary-500/20"
                                 : "bg-transparent",
                             "hover:bg-blue-300/40 transition-colors",
                         ].join(" ");
@@ -188,12 +188,24 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
                                 className="relative flex items-center justify-center"
                             >
                                 {/* WikiLink handles missing pages automatically */}
-                                <WikiLink
-                                    href={href}
-                                    className={`${cellClasses} block w-full h-full text-center`}
-                                >
-                                    {cell.label}
-                                </WikiLink>
+                                {
+                                    isHighlighted ? 
+                                    (
+                                        <WikiLink
+                                            href={href}
+                                            className={`${cellClasses} block w-full h-full text-center`}
+                                        >
+                                            {cell.label}
+                                        </WikiLink>
+                                    ) 
+                                    : 
+                                    (
+                                        <div className={`${cellClasses} block w-full h-full text-center text-tertiary-500`}>
+                                            {cell.label}
+                                        </div>
+                                    )
+                                }
+                                
                             </div>
                         );
                     })}
