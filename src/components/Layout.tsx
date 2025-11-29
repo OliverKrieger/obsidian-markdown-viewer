@@ -75,7 +75,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </SidebarShell>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 w-full overflow-x-hidden">
+            <main className="flex-1 flex flex-col overflow-x-hidden xl:ml-64">
                 {children}
             </main>
         </div>
