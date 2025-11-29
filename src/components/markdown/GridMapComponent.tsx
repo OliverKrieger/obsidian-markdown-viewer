@@ -173,7 +173,7 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
                         const href = `/page/${encodeURIComponent(fullLabel)}`;
 
                         const cellClasses = [
-                            "flex items-center justify-center text-[0.65rem] font-bold",
+                            "flex items-center justify-center text-[1rem] font-bold",
                             "border border-black/20",
                             "pointer-events-auto",
                             isHighlighted
