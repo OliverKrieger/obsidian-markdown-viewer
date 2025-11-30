@@ -1,6 +1,6 @@
 # World Viewer
 
-A Vite + React application for visualizing Obsidian markdown content — especially structured player-facing lore.  
+A Vite + React application for visualizing Obsidian markdown content — with the ability to split between player and DM facing bundles.  
 This project pulls `.md` files from your Obsidian vault, processes them, and exposes them inside a bundled viewer application.
 
 ---
@@ -26,13 +26,25 @@ The **World Viewer** reads markdown content directly from an Obsidian vault.
 During development and build, it automatically pulls markdown files from a configured folder, copies them into:
 
 ```
-public/content/Player/
+public/content/
 ```
 
 
-…and generates an `index.json` slug map for fast lookup/visualization inside the app.
+…and generates 2 manifest files - `dm-manifest.json` and `player-manifest`. These manifests will be in format:
+```
+{
+  "mode": "player" | "dm",
+  "slugMap": {},
+  "images": String [],
+  "missing": String []
+}
+```
+- Mode is used to know later if the application is in DM mode or Player mode. For development purposes, you can switch between them, but in the final build, the bundler sets it to the correct format.
+- Slug map for fast lookup/visualization inside the app.
+- Images are for any images, as they require custom handling to render properly for obsidian pathing.
+- Missing is links that you have in obsidian, but have no notes created for them.
 
-This allows you to maintain your lore/stories/world notes in Obsidian while generating a separate, cleaned player-facing viewer.
+This allows you to maintain your lore/stories/world notes in Obsidian while generating a separate, cleaned player-facing and dm-facing viewer.
 
 ---
 
@@ -44,11 +56,11 @@ Your Obsidian vault is expected to be structured at least like:
 ObsidianVault/
 │
 ├── DM Notes/
-└── Players/ <-- this folder is usually used for VITE_PLAYER_MARKDOWN_PATH
+└── Players/
 ```
 
 
-Only the folder referenced in your `.env` file is imported.  
+Only the folder referenced in your `.env` file is imported.
 It is **your responsibility** to keep DM Notes and Player Notes separated in Obsidian.
 
 ---
@@ -59,12 +71,20 @@ Create a `.env.development` file containing:
 
 
 ```
-VITE_PLAYER_MARKDOWN_PATH="<absolute_path_to_obsidian_player_folder>"
+VITE_VAULT_PATH="<absolute_path_to_obsidian_folder>"
+VITE_PLAYER_FOLDER="<name_of_player_folder>"
+VITE_DM_FOLDER="<name_of_dm_folder>"
+VITE_MODE=development | production
+VITE_VIEWER_MODE=player | dm
 ```
 
 Example:
 ```
-VITE_PLAYER_MARKDOWN_PATH="C:/Users/You/Documents/Obsidian/MyWorld/Players"
+VITE_VAULT_PATH="C:\\Users\\You\\Documents\\Obsidian\\MyWorld"
+VITE_PLAYER_FOLDER="Player Section"
+VITE_DM_FOLDER="DM Section"
+VITE_MODE="development"
+VITE_VIEWER_MODE="dm"
 ```
 
 
@@ -75,21 +95,14 @@ This folder will be recursively scanned for `.md` files and copied into the app.
 ## How Markdown Import Works
 
 Before `vite dev` or `vite build`, the script  
-`scripts/copy-player-markdown.js` runs automatically.
+`scripts/predev-copy-content.js` runs automatically.
 
 ### What this script does
 
-1. Reads `VITE_PLAYER_MARKDOWN_PATH`
-2. Recursively walks the folder, copying **all `.md` files**
-3. Copies them into:`public/content/Player/`
-4. Generates `index.json` mapping:
-
-```json
-{
-  "City of Brass": "Cities/CityOfBrass.md",
-  "Orders": "Factions/Orders.md"
-}
-```
+1. Reads `VITE_VAULT_PATH`
+2. Recursively walks the folder, copying **all `.md` and image files**
+3. Copies them into:`public/content/`
+4. Generates `dm-manifest.json` and `player-manifest.json` mapping
 
 ### Slugifying Rules
 
@@ -108,7 +121,7 @@ These slugs allow the React app to link, load, and display markdown files consis
 | `npm run dev`       | Starts the Vite dev server *(after importing markdown)*             |
 | `npm run build`     | Builds the Vite project for production *(after importing markdown)* |
 | `npm run serve:dist`| Runs a lightweight Express server to serve the built `dist/` folder |
-| `npm run bundle:player` | Creates a distributable EXE + zipped PlayerBundle               |
+| `npm run bundle` | Creates a distributable EXE + zipped Bundle               |
 | `npm run lint`      | Runs ESLint                                                         |
 | `predev / prebuild` | Automatically run the markdown import script                        |
 
@@ -165,9 +178,9 @@ You can now verify that the build behaves correctly before bundling.
 
 ## Bundling the Player Build (EXE + ZIP)
 
-To create a self-contained distributable (PlayerBundle.zip):
+To create a self-contained distributable (PlayerBundle.zip or DMBundle.zip):
 ```
-npm run bundle:player
+npm run bundle
 ```
 
 This performs:
@@ -184,7 +197,7 @@ bun build server.js --compile --outfile LoreViewer.exe
 
 This produces a standalone Windows executable that serves the embedded dist/ folder.
 
-### 3. Create the PlayerBundle directory
+### 3. Create the Bundle directories
 Contains:
 - `LoreViewer.exe`
 - `dist/`
@@ -194,9 +207,10 @@ Contains:
 Outputs:
 ```
 PlayerBundle.zip
+DMBundle.zip
 ```
 
-This ZIP can be given to players.
+This ZIP can be given to players or used as a DM to view all notes.
 They simply extract and run LoreViewer.exe.
 
 ---
@@ -226,5 +240,5 @@ iwr https://bun.sh/install.ps1 -useb | iex
 - Dev server → `npm run dev`
 - Build → `npm run build`
 - Test production → `npm run serve:dist`
-- Create EXE + ZIP → `npm run bundle:player`
+- Create EXE + ZIP → `npm run bundle`
 - Requires Bun for the final executable
