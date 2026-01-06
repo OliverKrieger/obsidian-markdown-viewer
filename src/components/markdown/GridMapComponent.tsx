@@ -1,5 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import { WikiLink } from "./WikiLink";
+import { TbMapPin } from "react-icons/tb";
 
 export type GridMapProps = {
     title?: string;
@@ -9,6 +10,11 @@ export type GridMapProps = {
     prefix?: string;
     labelStyle?: string;
     cells?: unknown;
+    // injected by MarkdownViewer wrapper
+    manifest?: {
+        slugMap: Record<string, string>;
+        pageMeta?: Record<string, any>;
+    };
 };
 
 // ─────────────────────────────
@@ -95,6 +101,59 @@ function parseCellMappings(raw: string[]): Set<string> {
     return labels;
 }
 
+/** Check if frontmatter meta indicates presence of a map */
+function hasMapInMeta(meta: any): boolean {
+
+    if (!meta || typeof meta !== "object") return false;
+    if (meta.hasMap === true) return true;
+    if (typeof meta.map === "string" && meta.map.trim().length > 0) return true;
+    if (Array.isArray(meta.maps) && meta.maps.length > 0) {return true;}
+    return false;
+}
+
+/** Check if value is a renderable primitive */
+function isRenderablePrimitive(v: any) {
+    return (
+        typeof v === "string" ||
+        typeof v === "number" ||
+        typeof v === "boolean"
+    );
+}
+
+/** Render a frontmatter value into React nodes */
+function renderValue(v: any): React.ReactNode {
+    if (v == null) return null;
+
+    if (isRenderablePrimitive(v)) return String(v);
+
+    if (Array.isArray(v)) {
+        const items = v
+            .map((x) => (isRenderablePrimitive(x) ? String(x) : null))
+            .filter(Boolean) as string[];
+
+        if (items.length === 0) return null;
+
+        return (
+            <ul className="list-disc pl-5">
+                {items.map((item) => (
+                    <li key={item}>{item}</li>
+                ))}
+            </ul>
+        );
+    }
+
+    // If someone puts an object in frontmatter, keep it readable without exploding the UI
+    try {
+        return (
+            <pre className="text-xs whitespace-pre-wrap wrap-break-word p-2 rounded bg-tertiary-900/10">
+                {JSON.stringify(v, null, 2)}
+            </pre>
+        );
+    } catch {
+        return null;
+    }
+}
+
 // ─────────────────────────────
 // Component
 // ─────────────────────────────
@@ -108,7 +167,10 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
         prefix,
         labelStyle: rawLabelStyle,
         cells,
+        manifest,
     } = props;
+
+    const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
     const rows = rawRows && rawRows > 0 ? rawRows : 0;
     const cols = rawCols && rawCols > 0 ? rawCols : 0;
@@ -138,6 +200,8 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
         const label = generateLabel(index, rows, cols, labelStyle);
         return { index, row, col, label };
     });
+
+     const hoveredMeta = hoveredSlug ? manifest?.pageMeta?.[hoveredSlug] : null;
 
     return (
         <section className="my-6 p-4 rounded border">
@@ -172,15 +236,24 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
 
                         const href = `/page/${encodeURIComponent(fullLabel)}`;
 
+                        const metaForCell = manifest?.pageMeta?.[fullLabel];
+                        const showMapIcon = hasMapInMeta(metaForCell);
+
                         const cellClasses = [
                             "flex items-center justify-center text-[1rem] font-bold",
                             "border border-black/20",
                             "pointer-events-auto",
+                            "relative",
                             isHighlighted
                                 ? "bg-secondary-500/20"
                                 : "bg-transparent",
                             "hover:bg-blue-300/40 transition-colors",
                         ].join(" ");
+
+                        const commonMouseHandlers = {
+                            onMouseEnter: () => setHoveredSlug(fullLabel),
+                            onMouseLeave: () => setHoveredSlug((cur) => (cur === fullLabel ? null : cur)),
+                        };
 
                         return (
                             <div
@@ -191,16 +264,33 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
                                 {
                                     isHighlighted ? 
                                     (
-                                        <WikiLink
-                                            href={href}
-                                            className={`${cellClasses} block w-full h-full text-center`}
-                                        >
-                                            {cell.label}
-                                        </WikiLink>
+                                        <>
+                                            <WikiLink
+                                                href={href}
+                                                className={`${cellClasses} block w-full h-full text-center`}
+                                                {...commonMouseHandlers}
+                                            >
+                                                {cell.label}
+
+                                                
+                                        
+                                            </WikiLink>
+
+                                            {showMapIcon && (
+                                                <span
+                                                    className="absolute top-1 right-1 text-secondary-100"
+                                                >
+                                                    <TbMapPin size={14} />
+                                                </span>
+                                            )}
+                                        </>
                                     ) 
                                     : 
                                     (
-                                        <div className={`${cellClasses} block w-full h-full text-center text-tertiary-500`}>
+                                        <div 
+                                            className={`${cellClasses} block w-full h-full text-center text-tertiary-500`}
+                                            {...commonMouseHandlers}    
+                                        >
                                             {cell.label}
                                         </div>
                                     )
@@ -211,6 +301,62 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
                     })}
                 </div>
             </div>
+
+            {/* Hovered metadata panel */}
+            {hoveredSlug && hoveredMeta && typeof hoveredMeta === "object" && (
+                <div className="mt-4 rounded border p-3 bg-(--bg-page)/85 fixed top-24 left-64 max-h-96 w-full max-w-[640px] overflow-auto">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <div className="text-sm font-semibold">
+                                {hoveredMeta.title ? String(hoveredMeta.title) : hoveredSlug}
+                            </div>
+                            <div className="text-xs opacity-70">{hoveredSlug}</div>
+                        </div>
+
+                        {hasMapInMeta(hoveredMeta) && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <TbMapPin />
+                                <span className="opacity-80">Map</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Flexible metadata dump (selected keys first, then the rest) */}
+                    <div className="mt-3 grid gap-3">
+                        {["connections", "npcs", "quests", "poi"].map((key) => {
+                            if (!(key in hoveredMeta)) return null;
+                            const rendered = renderValue(hoveredMeta[key]);
+                            if (!rendered) return null;
+
+                            return (
+                                <div key={key}>
+                                    <div className="text-xs font-semibold uppercase opacity-70 mb-1">
+                                        {key}
+                                    </div>
+                                    <div className="text-sm">{rendered}</div>
+                                </div>
+                            );
+                        })}
+
+                        {/* Render any other keys (keeps it flexible) */}
+                        {Object.keys(hoveredMeta)
+                            .filter((k) => !["title", "connections", "npcs", "quests", "poi"].includes(k))
+                            .map((k) => {
+                                const rendered = renderValue(hoveredMeta[k]);
+                                if (!rendered) return null;
+
+                                return (
+                                    <div key={k}>
+                                        <div className="text-xs font-semibold uppercase opacity-70 mb-1">
+                                            {k}
+                                        </div>
+                                        <div className="text-sm">{rendered}</div>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                </div>
+            )}
         </section>
     );
 };

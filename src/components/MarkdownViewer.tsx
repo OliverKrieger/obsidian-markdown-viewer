@@ -71,7 +71,9 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
     };
 
     const customComponents: Record<string, unknown> = {
-        "grid-map": GridMapComponent,
+        "grid-map": (props: any) => (
+            <GridMapComponent {...props} manifest={manifest} />
+        ),
     };
 
     return (

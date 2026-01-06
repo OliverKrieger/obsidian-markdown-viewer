@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import matter from "gray-matter";
 
 dotenv.config({ path: ".env.development" });
 
@@ -65,6 +66,14 @@ function classifyFile(relPath) {
     return "global";
 }
 
+function normaliseFrontmatter(data) {
+    if (!data || typeof data !== "object") return {};
+
+    // If non-serializable objects added, strip them here (future proofing).
+    // gray-matter usually returns plain JSON-compatible values.
+    return data;
+}
+
 // -------------------------
 // DATA STRUCTURES
 // -------------------------
@@ -78,6 +87,9 @@ const linksFromPlayer = new Set();
 const linksFromDM = new Set();
 
 const imageRefsForFile = {}; // mdRelPath -> [imageRelPaths]
+
+const pageMetaPlayer = {}; // slug -> frontmatter object
+const pageMetaDM = {};     // slug -> frontmatter object
 
 // -------------------------
 // PASS 1 — Copy and Index
@@ -170,6 +182,9 @@ for (const { relPath, fullPath } of allMarkdownFiles) {
 
     imageRefsForFile[relPath] = resolvedImages;
 
+    const parsed = matter(content);
+    const meta = normaliseFrontmatter(parsed.data);
+
     if (role === "player") slugMapPlayer[slug] = relPath;
     slugMapDM[slug] = relPath;
 
@@ -177,6 +192,11 @@ for (const { relPath, fullPath } of allMarkdownFiles) {
         wikiLinks.forEach((l) => linksFromPlayer.add(l));
     }
     wikiLinks.forEach((l) => linksFromDM.add(l));
+
+    if (role === "player") {
+        pageMetaPlayer[slug] = meta;
+    }
+    pageMetaDM[slug] = meta;
 }
 
 // -------------------------
@@ -213,6 +233,7 @@ fs.writeFileSync(
             slugMap: slugMapPlayer,
             images: playerImages,
             missing: missingPlayer,
+            pageMeta: pageMetaPlayer,
         },
         null,
         2
@@ -227,6 +248,7 @@ fs.writeFileSync(
             slugMap: slugMapDM,
             images: dmImages,
             missing: missingDM,
+            pageMeta: pageMetaDM,
         },
         null,
         2
