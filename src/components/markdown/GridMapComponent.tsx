@@ -1,6 +1,7 @@
-import React, {useState} from "react";
+import React, {useState, useRef} from "react";
 import { WikiLink } from "./WikiLink";
 import { TbMapPin } from "react-icons/tb";
+import { GridMapHoverPanel } from "../gridmap/GridMapHoverPanel";
 
 export type GridMapProps = {
     title?: string;
@@ -111,49 +112,6 @@ function hasMapInMeta(meta: any): boolean {
     return false;
 }
 
-/** Check if value is a renderable primitive */
-function isRenderablePrimitive(v: any) {
-    return (
-        typeof v === "string" ||
-        typeof v === "number" ||
-        typeof v === "boolean"
-    );
-}
-
-/** Render a frontmatter value into React nodes */
-function renderValue(v: any): React.ReactNode {
-    if (v == null) return null;
-
-    if (isRenderablePrimitive(v)) return String(v);
-
-    if (Array.isArray(v)) {
-        const items = v
-            .map((x) => (isRenderablePrimitive(x) ? String(x) : null))
-            .filter(Boolean) as string[];
-
-        if (items.length === 0) return null;
-
-        return (
-            <ul className="list-disc pl-5">
-                {items.map((item) => (
-                    <li key={item}>{item}</li>
-                ))}
-            </ul>
-        );
-    }
-
-    // If someone puts an object in frontmatter, keep it readable without exploding the UI
-    try {
-        return (
-            <pre className="text-xs whitespace-pre-wrap wrap-break-word p-2 rounded bg-tertiary-900/10">
-                {JSON.stringify(v, null, 2)}
-            </pre>
-        );
-    } catch {
-        return null;
-    }
-}
-
 // ─────────────────────────────
 // Component
 // ─────────────────────────────
@@ -171,6 +129,26 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
     } = props;
 
     const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+    const [hoverXY, setHoverXY] = useState<{ x: number; y: number } | null>(null);
+    const [panelHovered, setPanelHovered] = useState(false);
+
+    // Used to avoid flicker when moving from cell to panel
+    const closeTimerRef = useRef<number | null>(null);
+
+    function clearCloseTimer() {
+        if (closeTimerRef.current != null) {
+            window.clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+    }
+
+    function scheduleClose() {
+        clearCloseTimer();
+        closeTimerRef.current = window.setTimeout(() => {
+            setHoveredSlug(null);
+            setHoverXY(null);
+        }, 120); // small grace period
+    }
 
     const rows = rawRows && rawRows > 0 ? rawRows : 0;
     const cols = rawCols && rawCols > 0 ? rawCols : 0;
@@ -250,9 +228,20 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
                             "hover:bg-blue-300/40 transition-colors",
                         ].join(" ");
 
+                        const onEnter = (e: React.MouseEvent) => {
+                            clearCloseTimer();
+                            setHoveredSlug(fullLabel);
+                            setHoverXY({ x: e.clientX, y: e.clientY });
+                        };
+
+                        const onLeave = () => {
+                            // Only close if panel isn't hovered
+                            if (!panelHovered) scheduleClose();
+                        };
+
                         const commonMouseHandlers = {
-                            onMouseEnter: () => setHoveredSlug(fullLabel),
-                            onMouseLeave: () => setHoveredSlug((cur) => (cur === fullLabel ? null : cur)),
+                            onMouseEnter: onEnter,
+                            onMouseLeave: onLeave,
                         };
 
                         return (
@@ -303,59 +292,26 @@ export const GridMapComponent: React.FC<GridMapProps> = (props) => {
             </div>
 
             {/* Hovered metadata panel */}
-            {hoveredSlug && hoveredMeta && typeof hoveredMeta === "object" && (
-                <div className="mt-4 rounded border p-3 bg-(--bg-page)/85 fixed top-24 left-64 max-h-96 w-full max-w-[640px] overflow-auto">
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
-                            <div className="text-sm font-semibold">
-                                {hoveredMeta.title ? String(hoveredMeta.title) : hoveredSlug}
-                            </div>
-                            <div className="text-xs opacity-70">{hoveredSlug}</div>
-                        </div>
-
-                        {hasMapInMeta(hoveredMeta) && (
-                            <div className="flex items-center gap-2 text-sm">
-                                <TbMapPin />
-                                <span className="opacity-80">Map</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Flexible metadata dump (selected keys first, then the rest) */}
-                    <div className="mt-3 grid gap-3">
-                        {["connections", "npcs", "quests", "poi"].map((key) => {
-                            if (!(key in hoveredMeta)) return null;
-                            const rendered = renderValue(hoveredMeta[key]);
-                            if (!rendered) return null;
-
-                            return (
-                                <div key={key}>
-                                    <div className="text-xs font-semibold uppercase opacity-70 mb-1">
-                                        {key}
-                                    </div>
-                                    <div className="text-sm">{rendered}</div>
-                                </div>
-                            );
-                        })}
-
-                        {/* Render any other keys (keeps it flexible) */}
-                        {Object.keys(hoveredMeta)
-                            .filter((k) => !["title", "connections", "npcs", "quests", "poi"].includes(k))
-                            .map((k) => {
-                                const rendered = renderValue(hoveredMeta[k]);
-                                if (!rendered) return null;
-
-                                return (
-                                    <div key={k}>
-                                        <div className="text-xs font-semibold uppercase opacity-70 mb-1">
-                                            {k}
-                                        </div>
-                                        <div className="text-sm">{rendered}</div>
-                                    </div>
-                                );
-                            })}
-                    </div>
-                </div>
+            {hoveredSlug && hoveredMeta && typeof hoveredMeta === "object" && hoverXY && (
+                <GridMapHoverPanel
+                    slug={hoveredSlug}
+                    meta={hoveredMeta}
+                    x={hoverXY.x}
+                    y={hoverXY.y}
+                    onRequestClose={() => {
+                        clearCloseTimer();
+                        setHoveredSlug(null);
+                        setHoverXY(null);
+                    }}
+                    onMouseEnter={() => {
+                        clearCloseTimer();
+                        setPanelHovered(true);
+                    }}
+                    onMouseLeave={() => {
+                        setPanelHovered(false);
+                        scheduleClose();
+                    }}
+                />
             )}
         </section>
     );

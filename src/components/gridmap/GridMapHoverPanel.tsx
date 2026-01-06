@@ -1,0 +1,164 @@
+import React from "react";
+import { TbMapPin, TbX } from "react-icons/tb";
+
+function hasMapInMeta(meta: any): boolean {
+    if (!meta || typeof meta !== "object") return false;
+    if (meta.hasMap === true) return true;
+    if (typeof meta.map === "string" && meta.map.trim().length > 0) return true;
+    if (Array.isArray(meta.maps) && meta.maps.length > 0) return true;
+    return false;
+}
+
+function isRenderablePrimitive(v: any) {
+    return typeof v === "string" || typeof v === "number" || typeof v === "boolean";
+}
+
+function renderValue(v: any): React.ReactNode {
+    if (v == null) return null;
+
+    if (isRenderablePrimitive(v)) return String(v);
+
+    if (Array.isArray(v)) {
+        const items = v
+            .map((x) => (isRenderablePrimitive(x) ? String(x) : null))
+            .filter(Boolean) as string[];
+
+        if (items.length === 0) return null;
+
+        return (
+            <ul className="list-disc pl-5">
+                {items.map((item) => (
+                    <li key={item}>{item}</li>
+                ))}
+            </ul>
+        );
+    }
+
+    try {
+        return (
+            <pre className="text-xs whitespace-pre-wrap wrap-break-word p-2 rounded bg-tertiary-900/10">
+                {JSON.stringify(v, null, 2)}
+            </pre>
+        );
+    } catch {
+        return null;
+    }
+}
+
+export type GridMapHoverPanelProps = {
+    slug: string;
+    meta: Record<string, any>;
+    x: number; // viewport coords
+    y: number; // viewport coords
+    onRequestClose: () => void;
+
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+};
+
+const PRIORITY_KEYS = ["connections", "npcs", "quests", "poi"] as const;
+
+export const GridMapHoverPanel: React.FC<GridMapHoverPanelProps> = ({
+    slug,
+    meta,
+    x,
+    y,
+    onRequestClose,
+    onMouseEnter,
+    onMouseLeave,
+}) => {
+    // Position near cursor, but keep inside viewport
+    const PANEL_W = 420;
+    const PANEL_MAX_H = 360;
+    const MARGIN = 12;
+
+    const left = Math.min(x + 14, window.innerWidth - PANEL_W - MARGIN);
+    const top = Math.min(y + 14, window.innerHeight - PANEL_MAX_H - MARGIN);
+
+    const title = meta.title ? String(meta.title) : slug;
+
+    return (
+        <div
+            className="fixed z-9999 w-[420px] max-w-[calc(100vw-24px)]"
+            style={{ left, top }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
+            <div
+                className="
+                    rounded-xl border border-tertiary-900/60
+                    bg-(--bg-page)/90 backdrop-blur
+                    shadow-lg
+                "
+            >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 p-3 border-b border-tertiary-900/40">
+                    <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate">{title}</div>
+                        <div className="text-xs opacity-70 truncate">{slug}</div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                        {hasMapInMeta(meta) && (
+                            <span className="inline-flex items-center gap-1 text-xs opacity-80">
+                                <TbMapPin />
+                                <span>Map</span>
+                            </span>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={onRequestClose}
+                            className="p-1 rounded hover:bg-tertiary-900/20"
+                            title="Close"
+                        >
+                            <TbX />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Body (scrollable) */}
+                <div className="p-3 max-h-[360px] overflow-auto">
+                    <div className="grid gap-3">
+                        {/* Priority keys first */}
+                        {PRIORITY_KEYS.map((key) => {
+                            if (!(key in meta)) return null;
+                            const rendered = renderValue(meta[key]);
+                            if (!rendered) return null;
+
+                            return (
+                                <div key={key}>
+                                    <div className="text-xs font-semibold uppercase opacity-70 mb-1">
+                                        {key}
+                                    </div>
+                                    <div className="text-sm">{rendered}</div>
+                                </div>
+                            );
+                        })}
+
+                        {/* Other keys (flexible) */}
+                        {Object.keys(meta)
+                            .filter(
+                                (k) =>
+                                    !["title", ...PRIORITY_KEYS].includes(k as any)
+                            )
+                            .sort()
+                            .map((k) => {
+                                const rendered = renderValue(meta[k]);
+                                if (!rendered) return null;
+
+                                return (
+                                    <div key={k}>
+                                        <div className="text-xs font-semibold uppercase opacity-70 mb-1">
+                                            {k}
+                                        </div>
+                                        <div className="text-sm">{rendered}</div>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
