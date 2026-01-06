@@ -1,5 +1,76 @@
 import React from "react";
 import { TbMapPin, TbX } from "react-icons/tb";
+import { WikiLink } from "../markdown/WikiLink";
+
+type WikiToken =
+    | { type: "text"; value: string }
+    | { type: "wikilink"; slug: string; alias?: string };
+
+function tokenizeWikiLinks(input: string): WikiToken[] {
+    // matches [[...]] blocks
+    const re = /\[\[([^\]]+)\]\]/g;
+    const tokens: WikiToken[] = [];
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = re.exec(input)) !== null) {
+        const start = match.index;
+        const end = re.lastIndex;
+
+        // text before
+        if (start > lastIndex) {
+            tokens.push({ type: "text", value: input.slice(lastIndex, start) });
+        }
+
+        const inner = match[1] ?? "";
+        const [pathPart, aliasPart] = inner.split("|");
+        const slug = (pathPart ?? "").split("#")[0].trim(); // keep it simple for now
+        const alias = aliasPart?.trim();
+
+        if (slug) {
+            tokens.push({ type: "wikilink", slug, alias });
+        } else {
+            // malformed, treat as text
+            tokens.push({ type: "text", value: match[0] });
+        }
+
+        lastIndex = end;
+    }
+
+    // trailing text
+    if (lastIndex < input.length) {
+        tokens.push({ type: "text", value: input.slice(lastIndex) });
+    }
+
+    return tokens;
+}
+
+function renderWikiText(input: string): React.ReactNode {
+    const tokens = tokenizeWikiLinks(input);
+
+    // If there are no wikilinks, return plain string
+    const hasLinks = tokens.some((t) => t.type === "wikilink");
+    if (!hasLinks) return input;
+
+    return (
+        <>
+            {tokens.map((t, i) => {
+                if (t.type === "text") return <React.Fragment key={i}>{t.value}</React.Fragment>;
+
+                const href = `/page/${encodeURIComponent(t.slug)}`;
+                const label = t.alias || t.slug;
+
+                return (
+                    <WikiLink key={i} href={href} className="underline decoration-1">
+                        {label}
+                    </WikiLink>
+                );
+            })}
+        </>
+    );
+}
+
 
 function hasMapInMeta(meta: any): boolean {
     if (!meta || typeof meta !== "object") return false;
@@ -16,19 +87,20 @@ function isRenderablePrimitive(v: any) {
 function renderValue(v: any): React.ReactNode {
     if (v == null) return null;
 
-    if (isRenderablePrimitive(v)) return String(v);
+    if (typeof v === "string") return renderWikiText(v);
+    if (typeof v === "number" || typeof v === "boolean") return String(v);
 
     if (Array.isArray(v)) {
-        const items = v
-            .map((x) => (isRenderablePrimitive(x) ? String(x) : null))
-            .filter(Boolean) as string[];
+        const items = v.filter((x: any) => isRenderablePrimitive(x));
 
         if (items.length === 0) return null;
 
         return (
             <ul className="list-disc pl-5">
-                {items.map((item) => (
-                    <li key={item}>{item}</li>
+                {items.map((item: any, idx: number) => (
+                    <li key={`${idx}-${String(item).slice(0, 20)}`}>
+                        {typeof item === "string" ? renderWikiText(item) : String(item)}
+                    </li>
                 ))}
             </ul>
         );
@@ -118,7 +190,7 @@ export const GridMapHoverPanel: React.FC<GridMapHoverPanelProps> = ({
                 </div>
 
                 {/* Body (scrollable) */}
-                <div className="p-3 max-h-[360px] overflow-auto">
+                <div className="p-3 max-h-60 overflow-auto">
                     <div className="grid gap-3">
                         {/* Priority keys first */}
                         {PRIORITY_KEYS.map((key) => {
