@@ -200,7 +200,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
     return (
         <div
             className={[
-                "relative bg-card p-6 max-w-md shadow-lg border-2 border-brand-500/40",
+                "relative bg-secondary-500/20 p-6 max-w-md shadow-lg border-2 border-brand-500/40",
                 className ?? "",
             ].join(" ")}
         >

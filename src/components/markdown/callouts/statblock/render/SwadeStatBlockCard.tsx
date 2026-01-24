@@ -182,8 +182,8 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
     return (
         <div
             className={[
-                "relative bg-card p-6 max-w-md shadow-lg border border-secondary-500 rounded-lg",
-                "bg-linear-to-b from-card to-secondary-500/20",
+                "relative bg-secondary-500/20 p-6 max-w-md shadow-lg border border-secondary-500 rounded-lg",
+                "bg-linear-to-b from-secondary-500/30 to-secondary-500/20",
                 className ?? "",
             ].join(" ")}
         >
