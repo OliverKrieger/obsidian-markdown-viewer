@@ -15,7 +15,7 @@ import { createTableComponents } from "./markdown/TableComponents";
 import { createListComponents } from "./markdown/ListComponents";
 import { createHeadingComponents } from "./markdown/HeadingComponents";
 import { Divider } from "./markdown/Divider";
-import { renderCallout } from "./markdown/callouts/renderCallout";
+import { createRenderCallout } from "./markdown/callouts/renderCallout";
 import { remarkObsidianImages } from "./markdown/remark/remarkObsidianImages";
 import { rehypeGridMap } from "./markdown/rehype/rehypeGridMap";
 import { GridMapComponent } from "./markdown/GridMapComponent";
@@ -40,6 +40,8 @@ export const MarkdownViewer = ({ path }: { path: string }) => {
         list.push(rel);
         fileIndex.set(name, list);
     });
+
+    const renderCallout = createRenderCallout({ manifest });
 
     // Build components map and cast once so TS doesn't complain about "grid-map"
     const baseComponents: Partial<Components> = {
