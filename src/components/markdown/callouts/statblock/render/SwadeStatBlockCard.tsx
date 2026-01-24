@@ -231,12 +231,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                 <StatPill label="Pace" value={pace ?? "—"} />
                 <StatPill label="Parry" value={parry ?? "—"} />
                 <StatPill label="Tough" value={tough ?? (toughness ?? "—")} subValue={armor != null ? `(${armor})` : undefined} />
-                {charisma != null && (
-                    <StatPill
-                        label="Cha"
-                        value={String(charisma).startsWith("-") ? charisma : `+${charisma}`}
-                    />
-                )}
+                <StatPill label="Cha" value={charisma ?? "—"} />
             </div>
 
             <DiamondDivider />
