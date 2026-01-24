@@ -91,7 +91,7 @@ function AbilityRef({
         <>
             <WikiLink
                 href={slugToHref(refName)}
-                className="underline cursor-help text-primary"
+                className="underline cursor-help text-brand-500"
                 onMouseEnter={(e: any) => {
                     clearCloseTimer();
                     setHoverXY({ x: e.clientX, y: e.clientY });
@@ -182,8 +182,8 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
     return (
         <div
             className={[
-                "relative bg-card p-6 max-w-md shadow-lg border border-border rounded-lg",
-                "bg-linear-to-b from-card to-secondary/20",
+                "relative bg-card p-6 max-w-md shadow-lg border border-secondary-500 rounded-lg",
+                "bg-linear-to-b from-card to-secondary-500/20",
                 className ?? "",
             ].join(" ")}
         >
@@ -191,14 +191,14 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
 
             {/* Header */}
             <header className="text-center mb-4">
-                <h1 className="font-serif text-2xl font-bold text-primary tracking-wide">
+                <h1 className="font-serif text-2xl font-bold text-brand-500 tracking-wide">
                     {title}
                 </h1>
                 {type && (
                     <p className="text-sm text-muted-foreground italic">{type}</p>
                 )}
                 {wildCard && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider bg-accent/20 text-accent rounded">
+                    <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider bg-tertiary-500/20 text-tertiary-500 rounded">
                         Wild Card
                     </span>
                 )}
@@ -214,7 +214,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
 
             {/* Attributes */}
             <div className="mb-4">
-                <h2 className="font-serif text-sm font-bold text-primary uppercase tracking-wider mb-2 text-center">
+                <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2 text-center">
                     Attributes
                 </h2>
                 <div className="grid grid-cols-5 gap-2">
@@ -244,14 +244,14 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             {/* Skills */}
             {skillsList.length > 0 && (
                 <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-primary uppercase tracking-wider mb-2">
+                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
                         Skills
                     </h2>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                         {skillsList.map(([name, die], index) => (
                             <span key={name}>
                                 <span className="font-medium">{name}</span>{" "}
-                                <span className="text-primary font-semibold">{die}</span>
+                                <span className="text-brand-500 font-semibold">{die}</span>
                                 {index < skillsList.length - 1 && ","}
                             </span>
                         ))}
@@ -262,7 +262,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             {/* Edges */}
             {edges && edges.length > 0 && (
                 <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-primary uppercase tracking-wider mb-2">
+                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
                         Edges
                     </h2>
                     <div className="space-y-1">
@@ -276,7 +276,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             {/* Hindrances */}
             {hindrances && hindrances.length > 0 && (
                 <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-primary uppercase tracking-wider mb-2">
+                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
                         Hindrances
                     </h2>
                     <div className="flex flex-wrap gap-2 text-sm">
@@ -306,13 +306,13 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             {/* Special */}
             {special && special.length > 0 && (
                 <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-primary uppercase tracking-wider mb-2">
+                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
                         Special Abilities
                     </h2>
                     <div className="space-y-2">
                         {special.map((a, i) => (
                             <p key={i} className="text-sm">
-                                <span className="font-semibold italic text-primary">{a.name}:</span>{" "}
+                                <span className="font-semibold italic text-brand-500">{a.name}:</span>{" "}
                                 {a.ref ? <AbilityRef refName={a.ref} manifest={manifest} /> : null}
                                 {a.text ? <span className="text-muted-foreground"> {a.text}</span> : null}
                             </p>
@@ -324,7 +324,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             {/* Gear */}
             {gear && gear.length > 0 && (
                 <div>
-                    <h2 className="font-serif text-sm font-bold text-primary uppercase tracking-wider mb-2">
+                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
                         Gear
                     </h2>
                     <div className="text-sm space-y-1">
