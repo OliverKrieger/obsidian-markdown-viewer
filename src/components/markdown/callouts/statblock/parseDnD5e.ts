@@ -21,41 +21,51 @@ function parseAbilities(value: string): Dnd5eStatBlock["abilities"] {
     return Object.keys(out).length ? out : undefined;
 }
 
-function parseActionBullet(line: string): Dnd5eAction | null {
+function parseSectionEntry(line: string): Dnd5eAction | null {
     const cleaned = line.replace(/^\s*-\s*/, "").trim();
+    if (!cleaned) return null;
 
-    // "- [[Thing]]"
+    // "- [[Thing]]" OR "[[Thing]]"
     const justLink = cleaned.match(/^\[\[(.+?)\]\]$/);
     if (justLink) {
         const ref = justLink[1].trim();
         return { name: ref, ref };
     }
 
-    // "- Name: [[Ref]]" OR "- Name: text"
-    const idx = cleaned.indexOf(":");
-    if (idx === -1) {
-        if (cleaned.length > 0) return { name: cleaned };
-        return null;
+    // "Name: rest"
+    const idxColon = cleaned.indexOf(":");
+    if (idxColon !== -1) {
+        const name = cleaned.slice(0, idxColon).trim();
+        const rest = cleaned.slice(idxColon + 1).trim();
+
+        const linkOnly = rest.match(/^\[\[(.+?)\]\]$/);
+        if (linkOnly) {
+            const ref = linkOnly[1].trim();
+            return { name, ref };
+        }
+
+        const embedded = rest.match(/\[\[(.+?)\]\]/);
+        if (embedded) {
+            const ref = embedded[1].trim();
+            const text = rest.replace(/\[\[(.+?)\]\]/, "").trim();
+            return { name, ref, text: text || undefined };
+        }
+
+        return { name, text: rest || undefined };
     }
 
-    const name = cleaned.slice(0, idx).trim();
-    const rest = cleaned.slice(idx + 1).trim();
-
-    const linkOnly = rest.match(/^\[\[(.+?)\]\]$/);
-    if (linkOnly) {
-        const ref = linkOnly[1].trim();
-        return { name, ref };
+    // "Name. rest" (common in 5e traits like "Legendary Resistance (3/Day). If...")
+    const idxDot = cleaned.indexOf(".");
+    if (idxDot > 0) {
+        const name = cleaned.slice(0, idxDot).trim();
+        const rest = cleaned.slice(idxDot + 1).trim();
+        if (name && rest) return { name, text: rest };
     }
 
-    const embedded = rest.match(/\[\[(.+?)\]\]/);
-    if (embedded) {
-        const ref = embedded[1].trim();
-        const text = rest.replace(/\[\[(.+?)\]\]/, "").trim();
-        return { name, ref, text: text || undefined };
-    }
-
-    return { name, text: rest };
+    // fallback: treat entire line as name
+    return { name: cleaned };
 }
+
 
 type Section = "traits" | "actions" | "reactions" | "legendaryActions" | null;
 
@@ -93,25 +103,74 @@ export function parseDnd5e(lines: string[], title: string): Dnd5eStatBlock {
             continue;
         }
 
-        // bullets within sections
-        if (section && line.startsWith("-")) {
-            const a = parseActionBullet(line);
-            if (a) {
-                if (section === "traits") sb.traits!.push(a);
-                if (section === "actions") sb.actions!.push(a);
-                if (section === "reactions") sb.reactions!.push(a);
-                if (section === "legendaryActions") sb.legendaryActions!.push(a);
+        // Always ignore empty lines (don’t end sections)
+        if (!line) continue;
+
+        // If we're inside a section...
+        if (section) {
+            // If we hit another section header, switch (your header logic above already does continue)
+            // If we hit a normal key: value line (like "ac: ..."), we leave the section and fall through.
+            if (/^[\w-]+\s*:/.test(line) && !line.startsWith("-")) {
+                // IMPORTANT: only treat as "key: value" if the key is a known top-level field
+                // otherwise "Bite: ..." would incorrectly exit the actions section.
+                const k = normaliseKey(line.slice(0, line.indexOf(":")));
+                const isTopLevelKey = new Set([
+                    "ruleset",
+                    "size",
+                    "creaturetype",
+                    "type",
+                    "alignment",
+                    "ac",
+                    "armorclass",
+                    "hp",
+                    "hitpoints",
+                    "speed",
+                    "abilities",
+                    "saves",
+                    "savingthrows",
+                    "skills",
+                    "immunities",
+                    "damageimmunities",
+                    "resistances",
+                    "damageresistances",
+                    "vulnerabilities",
+                    "damagevulnerabilities",
+                    "conditionimmunities",
+                    "senses",
+                    "languages",
+                    "cr",
+                    "challenge",
+                    "class",
+                    "classname",
+                    "variant",
+                ]).has(k);
+
+                if (isTopLevelKey) {
+                    section = null; // fall through to key:value parsing
+                } else {
+                    // It's a section entry like "Bite: ..." — parse it as an action/trait/etc.
+                    const entry = parseSectionEntry(line);
+                    if (entry) {
+                        if (section === "traits") sb.traits!.push(entry);
+                        if (section === "actions") sb.actions!.push(entry);
+                        if (section === "reactions") sb.reactions!.push(entry);
+                        if (section === "legendaryActions") sb.legendaryActions!.push(entry);
+                    }
+                    continue;
+                }
+            } else {
+                // Bullet or plain line inside the section
+                const entry = parseSectionEntry(line);
+                if (entry) {
+                    if (section === "traits") sb.traits!.push(entry);
+                    if (section === "actions") sb.actions!.push(entry);
+                    if (section === "reactions") sb.reactions!.push(entry);
+                    if (section === "legendaryActions") sb.legendaryActions!.push(entry);
+                }
+                continue;
             }
-            continue;
         }
 
-        // leaving section if we hit a key: value
-        if (section && /^[\w-]+\s*:/.test(line)) {
-            section = null;
-            // fallthrough
-        } else if (section) {
-            continue;
-        }
 
         const idx = line.indexOf(":");
         if (idx === -1) continue;
