@@ -1,23 +1,41 @@
-// src/components/markdown/callouts/statblock/render/Dnd5eStatBlockCard.tsx
 import React, { useRef, useState } from "react";
 import type { Dnd5eAction, Dnd5eStatBlock, ManifestLike } from "../types";
+import { OrnamentBorder, StatDivider } from "./Shared";
+import { WikiLink } from "../../../WikiLink";
 
-function AbilityTable({ abilities }: { abilities: NonNullable<Dnd5eStatBlock["abilities"]> }) {
-    const order: (keyof typeof abilities)[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
-    return (
-        <div className="grid grid-cols-6 gap-2 text-center text-sm">
-            {order.map((k) => {
-                const v = abilities[k];
-                return (
-                    <div key={k} className="rounded-lg border p-2 bg-white/50">
-                        <div className="font-bold">{k}</div>
-                        <div>{v ? v.score : "—"}</div>
-                        <div className="opacity-70">{v ? `(${v.mod})` : ""}</div>
-                    </div>
-                );
-            })}
-        </div>
-    );
+function slugToHref(slug: string) {
+    return `/page/${encodeURIComponent(slug)}`;
+}
+
+function calculateModifier(score: number): string {
+    const mod = Math.floor((score - 10) / 2);
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+}
+
+function parseAC(ac?: string): { armorClass?: number; armorType?: string } {
+    if (!ac) return {};
+    const n = ac.match(/-?\d+/);
+    const armorClass = n ? Number(n[0]) : undefined;
+    const t = ac.match(/\((.+?)\)/);
+    const armorType = t?.[1]?.trim();
+    return { armorClass, armorType };
+}
+
+function parseHP(hp?: string): { hitPoints?: number; hitDice?: string } {
+    if (!hp) return {};
+    const n = hp.match(/-?\d+/);
+    const hitPoints = n ? Number(n[0]) : undefined;
+    const d = hp.match(/\((.+?)\)/);
+    const hitDice = d?.[1]?.trim();
+    return { hitPoints, hitDice };
+}
+
+function parseCR(cr?: string): { challengeRating?: string; proficiencyBonus?: string } {
+    if (!cr) return {};
+    const pbMatch = cr.match(/\(([-+]\d+)\)\s*$/);
+    const proficiencyBonus = pbMatch ? pbMatch[1] : undefined;
+    const challengeRating = pbMatch ? cr.replace(/\(([-+]\d+)\)\s*$/, "").trim() : cr.trim();
+    return { challengeRating, proficiencyBonus };
 }
 
 function HoverPanel({
@@ -61,19 +79,18 @@ function HoverPanel({
     );
 }
 
-function ActionList({
-    title,
-    items,
+function AbilityRef({
+    refName,
     manifest,
 }: {
-    title: string;
-    items: Dnd5eAction[];
+    refName: string;
     manifest?: ManifestLike;
 }) {
-    const [hoverRef, setHoverRef] = useState<string | null>(null);
     const [hoverXY, setHoverXY] = useState<{ x: number; y: number } | null>(null);
     const [panelHovered, setPanelHovered] = useState(false);
     const closeTimerRef = useRef<number | null>(null);
+
+    const meta = manifest?.pageMeta?.[refName];
 
     function clearCloseTimer() {
         if (closeTimerRef.current != null) {
@@ -81,48 +98,31 @@ function ActionList({
             closeTimerRef.current = null;
         }
     }
+
     function scheduleClose() {
         clearCloseTimer();
-        closeTimerRef.current = window.setTimeout(() => {
-            setHoverRef(null);
-            setHoverXY(null);
-        }, 120);
+        closeTimerRef.current = window.setTimeout(() => setHoverXY(null), 120);
     }
 
-    const meta = hoverRef ? manifest?.pageMeta?.[hoverRef] : null;
-
     return (
-        <div className="mt-3">
-            <div className="font-bold">{title}</div>
-            <div className="mt-2 space-y-2 text-sm">
-                {items.map((a, i) => {
-                    const onEnter = (e: React.MouseEvent) => {
-                        if (!a.ref) return;
-                        clearCloseTimer();
-                        setHoverRef(a.ref);
-                        setHoverXY({ x: e.clientX, y: e.clientY });
-                    };
-                    const onLeave = () => {
-                        if (!panelHovered) scheduleClose();
-                    };
+        <>
+            <WikiLink
+                href={slugToHref(refName)}
+                className="underline cursor-help text-primary"
+                onMouseEnter={(e: any) => {
+                    clearCloseTimer();
+                    setHoverXY({ x: e.clientX, y: e.clientY });
+                }}
+                onMouseLeave={() => {
+                    if (!panelHovered) scheduleClose();
+                }}
+            >
+                {refName}
+            </WikiLink>
 
-                    return (
-                        <div key={i} className="leading-snug">
-                            <span className="font-semibold">{a.name}.</span>{" "}
-                            {a.ref ? (
-                                <span className="underline cursor-help" onMouseEnter={onEnter} onMouseLeave={onLeave}>
-                                    {a.ref}
-                                </span>
-                            ) : null}
-                            {a.text ? <span className="opacity-80"> {a.text}</span> : null}
-                        </div>
-                    );
-                })}
-            </div>
-
-            {hoverRef && meta && hoverXY && (
+            {hoverXY && meta && (
                 <HoverPanel
-                    title={hoverRef}
+                    title={refName}
                     meta={meta}
                     x={hoverXY.x}
                     y={hoverXY.y}
@@ -136,7 +136,23 @@ function ActionList({
                     }}
                 />
             )}
-        </div>
+        </>
+    );
+}
+
+function ActionLine({
+    item,
+    manifest,
+}: {
+    item: Dnd5eAction;
+    manifest?: ManifestLike;
+}) {
+    return (
+        <p className="text-sm">
+            <span className="font-semibold italic text-primary">{item.name}.</span>{" "}
+            {item.ref ? <AbilityRef refName={item.ref} manifest={manifest} /> : null}
+            {item.text ? <span className="opacity-90"> {item.text}</span> : null}
+        </p>
     );
 }
 
@@ -151,8 +167,8 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
     abilities,
     saves,
     skills,
-    immunities,
     resistances,
+    immunities,
     vulnerabilities,
     conditionImmunities,
     senses,
@@ -163,49 +179,207 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
     reactions,
     legendaryActions,
     className,
-    variant = "classic",
     manifest,
 }) => {
-    const compact = variant === "compact";
-    const subtitle = [size, creatureType, alignment].filter(Boolean).join(" ") || undefined;
+    const { armorClass, armorType } = parseAC(ac);
+    const { hitPoints, hitDice } = parseHP(hp);
+    const { challengeRating, proficiencyBonus } = parseCR(cr);
+
+    const subtitle = [size, creatureType, alignment].filter(Boolean).join(" ");
+
+    const ab = abilities ?? {};
+    const abilityOrder: Array<["STR" | "DEX" | "CON" | "INT" | "WIS" | "CHA", string]> = [
+        ["STR", "STR"],
+        ["DEX", "DEX"],
+        ["CON", "CON"],
+        ["INT", "INT"],
+        ["WIS", "WIS"],
+        ["CHA", "CHA"],
+    ];
 
     return (
-        <section className={`my-6 rounded-2xl border p-4 bg-white/60 shadow-sm ${className ?? ""}`}>
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h3 className="text-2xl font-extrabold">{title}</h3>
-                    {subtitle && <div className="italic opacity-80">{subtitle}</div>}
-                </div>
+        <div
+            className={[
+                "relative bg-card p-6 max-w-md shadow-lg border-2 border-primary/40",
+                "bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C8B75%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]",
+                className ?? "",
+            ].join(" ")}
+        >
+            <OrnamentBorder />
 
-                <div className="text-sm text-right min-w-[200px] space-y-1">
-                    {ac && <div><span className="font-semibold">AC</span> {ac}</div>}
-                    {hp && <div><span className="font-semibold">HP</span> {hp}</div>}
-                    {speed && <div><span className="font-semibold">Speed</span> {speed}</div>}
-                </div>
+            {/* Header */}
+            <header className="mb-2">
+                <h1 className="font-serif text-2xl font-bold text-primary tracking-wide">
+                    {title}
+                </h1>
+                {subtitle && (
+                    <p className="text-sm italic text-muted-foreground">{subtitle}</p>
+                )}
+            </header>
+
+            <StatDivider />
+
+            {/* Basic Stats */}
+            <div className="space-y-1 text-sm">
+                {(armorClass != null || ac) && (
+                    <p>
+                        <span className="font-semibold text-primary">Armor Class</span>{" "}
+                        {armorClass ?? ac}
+                        {armorType && ` (${armorType})`}
+                    </p>
+                )}
+                {(hitPoints != null || hp) && (
+                    <p>
+                        <span className="font-semibold text-primary">Hit Points</span>{" "}
+                        {hitPoints ?? hp} {hitDice ? `(${hitDice})` : null}
+                    </p>
+                )}
+                {speed && (
+                    <p>
+                        <span className="font-semibold text-primary">Speed</span> {speed}
+                    </p>
+                )}
             </div>
 
-            {abilities && (
-                <div className="mt-4">
-                    <AbilityTable abilities={abilities} />
+            <StatDivider />
+
+            {/* Ability Scores */}
+            <div className="grid grid-cols-6 gap-1 text-center text-sm">
+                {abilityOrder.map(([k]) => {
+                    const score = (ab as any)?.[k]?.score;
+                    const scoreNumber = typeof score === "number" ? score : undefined;
+                    return (
+                        <div key={k}>
+                            <div className="font-serif font-bold text-primary text-xs">{k}</div>
+                            <div className="font-semibold">
+                                {scoreNumber != null ? scoreNumber : "—"}{" "}
+                                <span className="text-muted-foreground text-xs">
+                                    {scoreNumber != null ? `(${calculateModifier(scoreNumber)})` : ""}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <StatDivider />
+
+            {/* Additional Stats */}
+            <div className="space-y-1 text-sm">
+                {saves && (
+                    <p>
+                        <span className="font-semibold text-primary">Saving Throws</span>{" "}
+                        {saves}
+                    </p>
+                )}
+                {skills && (
+                    <p>
+                        <span className="font-semibold text-primary">Skills</span>{" "}
+                        {skills}
+                    </p>
+                )}
+                {resistances && (
+                    <p>
+                        <span className="font-semibold text-primary">Damage Resistances</span>{" "}
+                        {resistances}
+                    </p>
+                )}
+                {immunities && (
+                    <p>
+                        <span className="font-semibold text-primary">Damage Immunities</span>{" "}
+                        {immunities}
+                    </p>
+                )}
+                {vulnerabilities && (
+                    <p>
+                        <span className="font-semibold text-primary">Damage Vulnerabilities</span>{" "}
+                        {vulnerabilities}
+                    </p>
+                )}
+                {conditionImmunities && (
+                    <p>
+                        <span className="font-semibold text-primary">Condition Immunities</span>{" "}
+                        {conditionImmunities}
+                    </p>
+                )}
+                {senses && (
+                    <p>
+                        <span className="font-semibold text-primary">Senses</span> {senses}
+                    </p>
+                )}
+                {languages && (
+                    <p>
+                        <span className="font-semibold text-primary">Languages</span>{" "}
+                        {languages}
+                    </p>
+                )}
+                {(challengeRating || cr) && (
+                    <p>
+                        <span className="font-semibold text-primary">Challenge</span>{" "}
+                        {challengeRating ?? cr}
+                        {proficiencyBonus ? ` (${proficiencyBonus})` : null}
+                    </p>
+                )}
+            </div>
+
+            <StatDivider />
+
+            {/* Traits */}
+            {traits && traits.length > 0 && (
+                <div className="space-y-2 text-sm">
+                    {traits.map((t, i) => (
+                        <ActionLine key={i} item={t} manifest={manifest} />
+                    ))}
                 </div>
             )}
 
-            <div className={`mt-4 grid ${compact ? "grid-cols-1" : "md:grid-cols-2"} gap-3 text-sm`}>
-                {saves && <div><span className="font-semibold">Saving Throws:</span> <span className="opacity-80">{saves}</span></div>}
-                {skills && <div><span className="font-semibold">Skills:</span> <span className="opacity-80">{skills}</span></div>}
-                {immunities && <div><span className="font-semibold">Damage Immunities:</span> <span className="opacity-80">{immunities}</span></div>}
-                {resistances && <div><span className="font-semibold">Damage Resistances:</span> <span className="opacity-80">{resistances}</span></div>}
-                {vulnerabilities && <div><span className="font-semibold">Damage Vulnerabilities:</span> <span className="opacity-80">{vulnerabilities}</span></div>}
-                {conditionImmunities && <div><span className="font-semibold">Condition Immunities:</span> <span className="opacity-80">{conditionImmunities}</span></div>}
-                {senses && <div><span className="font-semibold">Senses:</span> <span className="opacity-80">{senses}</span></div>}
-                {languages && <div><span className="font-semibold">Languages:</span> <span className="opacity-80">{languages}</span></div>}
-                {cr && <div><span className="font-semibold">Challenge:</span> <span className="opacity-80">{cr}</span></div>}
-            </div>
+            {/* Actions */}
+            {actions && actions.length > 0 && (
+                <div className="mt-4">
+                    <h2 className="font-serif text-lg font-bold text-primary border-b border-primary pb-1 mb-2">
+                        Actions
+                    </h2>
+                    <div className="space-y-2 text-sm">
+                        {actions.map((a, i) => (
+                            <ActionLine key={i} item={a} manifest={manifest} />
+                        ))}
+                    </div>
+                </div>
+            )}
 
-            {traits && traits.length > 0 && <ActionList title="Traits" items={traits} manifest={manifest} />}
-            {actions && actions.length > 0 && <ActionList title="Actions" items={actions} manifest={manifest} />}
-            {reactions && reactions.length > 0 && <ActionList title="Reactions" items={reactions} manifest={manifest} />}
-            {legendaryActions && legendaryActions.length > 0 && <ActionList title="Legendary Actions" items={legendaryActions} manifest={manifest} />}
-        </section>
+            {/* Reactions */}
+            {reactions && reactions.length > 0 && (
+                <div className="mt-4">
+                    <h2 className="font-serif text-lg font-bold text-primary border-b border-primary pb-1 mb-2">
+                        Reactions
+                    </h2>
+                    <div className="space-y-2 text-sm">
+                        {reactions.map((r, i) => (
+                            <ActionLine key={i} item={r} manifest={manifest} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Legendary Actions */}
+            {legendaryActions && legendaryActions.length > 0 && (
+                <div className="mt-4">
+                    <h2 className="font-serif text-lg font-bold text-primary border-b border-primary pb-1 mb-2">
+                        Legendary Actions
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-2">
+                        The creature can take 3 legendary actions, choosing from the options below.
+                        Only one legendary action option can be used at a time and only at the end of
+                        another creature{"'"}s turn. The creature regains spent legendary actions at the
+                        start of its turn.
+                    </p>
+                    <div className="space-y-2 text-sm">
+                        {legendaryActions.map((a, i) => (
+                            <ActionLine key={i} item={a} manifest={manifest} />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
