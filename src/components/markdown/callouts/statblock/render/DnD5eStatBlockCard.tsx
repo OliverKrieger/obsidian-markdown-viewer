@@ -108,7 +108,7 @@ function AbilityRef({
         <>
             <WikiLink
                 href={slugToHref(refName)}
-                className="underline cursor-help text-primary"
+                className="underline cursor-help text-brand-500"
                 onMouseEnter={(e: any) => {
                     clearCloseTimer();
                     setHoverXY({ x: e.clientX, y: e.clientY });
@@ -149,7 +149,7 @@ function ActionLine({
 }) {
     return (
         <p className="text-sm">
-            <span className="font-semibold italic text-primary">{item.name}.</span>{" "}
+            <span className="font-semibold italic text-brand-500">{item.name}.</span>{" "}
             {item.ref ? <AbilityRef refName={item.ref} manifest={manifest} /> : null}
             {item.text ? <span className="opacity-90"> {item.text}</span> : null}
         </p>
@@ -200,7 +200,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
     return (
         <div
             className={[
-                "relative bg-card p-6 max-w-md shadow-lg border-2 border-primary/40",
+                "relative bg-card p-6 max-w-md shadow-lg border-2 border-brand-500/40",
                 "bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C8B75%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]",
                 className ?? "",
             ].join(" ")}
@@ -209,7 +209,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
 
             {/* Header */}
             <header className="mb-2">
-                <h1 className="font-serif text-2xl font-bold text-primary tracking-wide">
+                <h1 className="font-serif text-2xl font-bold text-brand-500 tracking-wide">
                     {title}
                 </h1>
                 {subtitle && (
@@ -223,20 +223,20 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             <div className="space-y-1 text-sm">
                 {(armorClass != null || ac) && (
                     <p>
-                        <span className="font-semibold text-primary">Armor Class</span>{" "}
+                        <span className="font-semibold text-brand-500">Armor Class</span>{" "}
                         {armorClass ?? ac}
                         {armorType && ` (${armorType})`}
                     </p>
                 )}
                 {(hitPoints != null || hp) && (
                     <p>
-                        <span className="font-semibold text-primary">Hit Points</span>{" "}
+                        <span className="font-semibold text-brand-500">Hit Points</span>{" "}
                         {hitPoints ?? hp} {hitDice ? `(${hitDice})` : null}
                     </p>
                 )}
                 {speed && (
                     <p>
-                        <span className="font-semibold text-primary">Speed</span> {speed}
+                        <span className="font-semibold text-brand-500">Speed</span> {speed}
                     </p>
                 )}
             </div>
@@ -250,7 +250,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
                     const scoreNumber = typeof score === "number" ? score : undefined;
                     return (
                         <div key={k}>
-                            <div className="font-serif font-bold text-primary text-xs">{k}</div>
+                            <div className="font-serif font-bold text-brand-500 text-xs">{k}</div>
                             <div className="font-semibold">
                                 {scoreNumber != null ? scoreNumber : "—"}{" "}
                                 <span className="text-muted-foreground text-xs">
@@ -268,54 +268,54 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             <div className="space-y-1 text-sm">
                 {saves && (
                     <p>
-                        <span className="font-semibold text-primary">Saving Throws</span>{" "}
+                        <span className="font-semibold text-brand-500">Saving Throws</span>{" "}
                         {saves}
                     </p>
                 )}
                 {skills && (
                     <p>
-                        <span className="font-semibold text-primary">Skills</span>{" "}
+                        <span className="font-semibold text-brand-500">Skills</span>{" "}
                         {skills}
                     </p>
                 )}
                 {resistances && (
                     <p>
-                        <span className="font-semibold text-primary">Damage Resistances</span>{" "}
+                        <span className="font-semibold text-brand-500">Damage Resistances</span>{" "}
                         {resistances}
                     </p>
                 )}
                 {immunities && (
                     <p>
-                        <span className="font-semibold text-primary">Damage Immunities</span>{" "}
+                        <span className="font-semibold text-brand-500">Damage Immunities</span>{" "}
                         {immunities}
                     </p>
                 )}
                 {vulnerabilities && (
                     <p>
-                        <span className="font-semibold text-primary">Damage Vulnerabilities</span>{" "}
+                        <span className="font-semibold text-brand-500">Damage Vulnerabilities</span>{" "}
                         {vulnerabilities}
                     </p>
                 )}
                 {conditionImmunities && (
                     <p>
-                        <span className="font-semibold text-primary">Condition Immunities</span>{" "}
+                        <span className="font-semibold text-brand-500">Condition Immunities</span>{" "}
                         {conditionImmunities}
                     </p>
                 )}
                 {senses && (
                     <p>
-                        <span className="font-semibold text-primary">Senses</span> {senses}
+                        <span className="font-semibold text-brand-500">Senses</span> {senses}
                     </p>
                 )}
                 {languages && (
                     <p>
-                        <span className="font-semibold text-primary">Languages</span>{" "}
+                        <span className="font-semibold text-brand-500">Languages</span>{" "}
                         {languages}
                     </p>
                 )}
                 {(challengeRating || cr) && (
                     <p>
-                        <span className="font-semibold text-primary">Challenge</span>{" "}
+                        <span className="font-semibold text-brand-500">Challenge</span>{" "}
                         {challengeRating ?? cr}
                         {proficiencyBonus ? ` (${proficiencyBonus})` : null}
                     </p>
@@ -336,7 +336,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             {/* Actions */}
             {actions && actions.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="font-serif text-lg font-bold text-primary border-b border-primary pb-1 mb-2">
+                    <h2 className="font-serif text-lg font-bold text-brand-500 border-b border-brand-500 pb-1 mb-2">
                         Actions
                     </h2>
                     <div className="space-y-2 text-sm">
@@ -350,7 +350,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             {/* Reactions */}
             {reactions && reactions.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="font-serif text-lg font-bold text-primary border-b border-primary pb-1 mb-2">
+                    <h2 className="font-serif text-lg font-bold text-brand-500 border-b border-brand-500 pb-1 mb-2">
                         Reactions
                     </h2>
                     <div className="space-y-2 text-sm">
@@ -364,7 +364,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             {/* Legendary Actions */}
             {legendaryActions && legendaryActions.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="font-serif text-lg font-bold text-primary border-b border-primary pb-1 mb-2">
+                    <h2 className="font-serif text-lg font-bold text-brand-500 border-b border-brand-500 pb-1 mb-2">
                         Legendary Actions
                     </h2>
                     <p className="text-sm text-muted-foreground mb-2">
