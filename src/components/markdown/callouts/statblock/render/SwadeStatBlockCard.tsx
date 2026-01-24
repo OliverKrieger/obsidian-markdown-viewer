@@ -287,7 +287,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                                     key={index}
                                     className={[
                                         "px-2 py-0.5 rounded text-xs",
-                                        isMajor ? "bg-destructive/20 text-destructive" : "bg-muted text-muted-foreground",
+                                        isMajor ? "bg-tertiary-900 text-tertiary-100" : "bg-secondary-900 text-secondary-100",
                                     ].join(" ")}
                                 >
                                     {name} ({typeTag})
