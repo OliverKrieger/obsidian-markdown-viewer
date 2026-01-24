@@ -3,8 +3,8 @@ import { Callout } from "./Callout";
 import type { ReactNode } from "react";
 import { FigureCallout } from "./FigureCallout";
 import { parseFigureCallout } from "./parseFigureCallout";
-import { StatBlockCallout } from "./StatBlockCallout";
-import { parseStatBlockCallout } from "./parseStatBlockCallout";
+import { parseStatBlockCallout } from "./statblock/parseStatBlockCallout";
+import { getStatBlockRenderer } from "./statblock/renderers";
 
 type ManifestLike = {
     slugMap: Record<string, string>;
@@ -53,8 +53,9 @@ export function createRenderCallout(ctx: { manifest?: ManifestLike }) {
         }
 
         if (typeKey === "statblock") {
-            const sb = parseStatBlockCallout(node, text, title || undefined);
-            return <StatBlockCallout {...sb} manifest={ctx.manifest} />;
+            const parsed = parseStatBlockCallout(node, text, title || "Stat Block");
+            const Renderer = getStatBlockRenderer(parsed.ruleset);
+            return <Renderer {...(parsed as any)} manifest={ctx.manifest} />;
         }
 
         return (
