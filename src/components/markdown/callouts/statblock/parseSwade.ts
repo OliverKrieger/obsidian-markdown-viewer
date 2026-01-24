@@ -5,7 +5,6 @@ function normaliseKey(k: string) {
 }
 
 function splitInlinePairs(s: string): Record<string, string> {
-    // "Agi d10, Sma d8" -> { Agi: d10, Sma: d8 }
     const out: Record<string, string> = {};
     s.split(",")
         .map((x) => x.trim())
@@ -20,18 +19,16 @@ function splitInlinePairs(s: string): Record<string, string> {
 
 function parseAbilityBullet(line: string): StatBlockAbilityRef | null {
     const cleaned = line.replace(/^\s*-\s*/, "").trim();
+    if (!cleaned) return null;
 
-    // "- [[Undead]]"
     const justLink = cleaned.match(/^\[\[(.+?)\]\]$/);
     if (justLink) {
         const ref = justLink[1].trim();
         return { name: ref, ref };
     }
 
-    // "- Name: [[Ref]]"  OR "- Name: text"
     const idx = cleaned.indexOf(":");
     if (idx === -1) {
-        // allow "- Undead" as plain label
         if (cleaned.length > 0) return { name: cleaned };
         return null;
     }
@@ -52,7 +49,7 @@ function parseAbilityBullet(line: string): StatBlockAbilityRef | null {
         return { name, ref, text: text || undefined };
     }
 
-    return { name, text: rest };
+    return { name, text: rest || undefined };
 }
 
 type Section = "edges" | "hindrances" | "gear" | "special" | null;
@@ -68,51 +65,86 @@ export function parseSwade(lines: string[], title: string): SwadeStatBlock {
 
     for (const rawLine of lines) {
         const line = rawLine.trim();
+        if (!line) continue;
 
-        // detect section headers that expect bullets
-        if (/^edges\s*:\s*$/i.test(line)) {
+        // section headers
+        if (/^edges\s*:?\s*$/i.test(line)) {
             section = "edges";
             sb.edges ??= [];
             continue;
         }
-        if (/^hindrances\s*:\s*$/i.test(line)) {
+        if (/^hindrances\s*:?\s*$/i.test(line)) {
             section = "hindrances";
             sb.hindrances ??= [];
             continue;
         }
-        if (/^gear\s*:\s*$/i.test(line)) {
+        if (/^gear\s*:?\s*$/i.test(line)) {
             section = "gear";
             sb.gear ??= [];
             continue;
         }
-        if (/^special\s*:\s*$/i.test(line) || /^special abilities\s*:\s*$/i.test(line)) {
+        if (/^special\s*:?\s*$/i.test(line) || /^special abilities\s*:?\s*$/i.test(line)) {
             section = "special";
             sb.special ??= [];
             continue;
         }
 
-        // handle bullets in section mode
-        if (section && line.startsWith("-")) {
-            if (section === "gear") {
-                sb.gear!.push(line.replace(/^\s*-\s*/, "").trim());
-            } else {
-                const ability = parseAbilityBullet(line);
-                if (ability) {
-                    if (section === "edges") sb.edges!.push(ability);
-                    if (section === "hindrances") sb.hindrances!.push(ability);
-                    if (section === "special") sb.special!.push(ability);
-                }
-            }
-            continue;
-        }
+        // section mode: accept BOTH bullets and plain lines
+        if (section) {
+            // If we hit a top-level key:value line, exit section and fall through
+            if (/^[\w-]+\s*:/.test(line)) {
+                const k = normaliseKey(line.slice(0, line.indexOf(":")));
+                const isTopLevelKey = new Set([
+                    "ruleset",
+                    "type",
+                    "desc",
+                    "description",
+                    "attributes",
+                    "skills",
+                    "pace",
+                    "parry",
+                    "toughness",
+                    "tough",
+                    "charisma",
+                    "cha",
+                    "class",
+                    "classname",
+                    "variant",
+                ]).has(k);
 
-        // if we hit a non-bullet key/value, exit section mode
-        if (section && /^[\w-]+\s*:/.test(line)) {
-            section = null;
-            // fallthrough to parse key/value
-        } else if (section) {
-            // in a section but not a bullet and not a new key => ignore
-            continue;
+                if (isTopLevelKey) {
+                    section = null; // fallthrough to parse key/value
+                } else {
+                    // treat as section entry (rare)
+                    if (section === "gear") {
+                        sb.gear!.push(line.replace(/^\s*-\s*/, "").trim());
+                    } else {
+                        const dashNormalised = line.replace(/\s+[—–-]\s+/, ": ");
+                        const ability = parseAbilityBullet(dashNormalised);
+                        if (ability) {
+                            if (section === "edges") sb.edges!.push(ability);
+                            if (section === "hindrances") sb.hindrances!.push(ability);
+                            if (section === "special") sb.special!.push(ability);
+                        }
+                    }
+                    continue;
+                }
+            } else {
+                // Plain section entry (most common)
+                if (section === "gear") {
+                    sb.gear!.push(line.replace(/^\s*-\s*/, "").trim());
+                } else {
+                    // Support "Name — text" by normalising to "Name: text"
+                    const dashNormalised = line.replace(/\s+[—–-]\s+/, ": ");
+                    const ability = parseAbilityBullet(dashNormalised);
+                    if (ability) {
+                        if (section === "edges") sb.edges!.push(ability);
+                        if (section === "hindrances") sb.hindrances!.push(ability);
+                        if (section === "special") sb.special!.push(ability);
+                    }
+                }
+                continue;
+            }
         }
 
         // key: value lines
@@ -125,7 +157,6 @@ export function parseSwade(lines: string[], title: string): SwadeStatBlock {
 
         switch (key) {
             case "ruleset":
-                // already handled by dispatcher, safe to ignore
                 break;
 
             case "type":
@@ -174,7 +205,6 @@ export function parseSwade(lines: string[], title: string): SwadeStatBlock {
         }
     }
 
-    // clean empty arrays
     if (sb.edges?.length === 0) delete sb.edges;
     if (sb.hindrances?.length === 0) delete sb.hindrances;
     if (sb.special?.length === 0) delete sb.special;
