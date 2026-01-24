@@ -43,8 +43,8 @@ export function OrnamentBorder() {
 
 export function WildCardBadge() {
     return (
-        <div className="absolute -top-3 -right-3 w-10 h-10 bg-tertiary-100 rounded-full flex items-center justify-center shadow-md border-2 border-tertiary-500">
-            <svg className="w-6 h-6 text-tertiary-500" viewBox="0 0 24 24" fill="currentColor">
+        <div className="absolute -top-3 -right-3 w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center shadow-md border-2 border-brand-500">
+            <svg className="w-6 h-6 text-brand-100" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
         </div>
@@ -59,7 +59,7 @@ export function AttributeBox({
     value: string;
 }) {
     return (
-        <div className="flex flex-col items-center p-2 bg-secondary-500/20 rounded border border-brand-500">
+        <div className="flex flex-col items-center p-2 bg-brand-100/10 rounded border border-brand-500">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {label}
             </span>
@@ -78,7 +78,7 @@ export function StatPill({
     subValue?: React.ReactNode;
 }) {
     return (
-        <div className="text-center p-2 bg-brand-500/10 rounded">
+        <div className="text-center p-2 bg-brand-500/15 rounded">
             <span className="block text-xs uppercase text-muted-foreground">{label}</span>
             <span className="font-bold text-brand-500">
                 {value}

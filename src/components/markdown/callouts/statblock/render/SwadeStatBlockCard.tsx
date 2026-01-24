@@ -134,15 +134,15 @@ function AbilityLine({
 }) {
     return (
         <p className="text-sm">
-            {showDash ? <span className="text-muted-foreground">• </span> : null}
+            {showDash ? <span className="opacity-85">• </span> : null}
             <span className="font-semibold">{item.name}</span>
             {item.ref ? (
                 <>
-                    <span className="text-muted-foreground"> — </span>
+                    <span className="opacity-85"> — </span>
                     <AbilityRef refName={item.ref} manifest={manifest} />
                 </>
             ) : null}
-            {item.text ? <span className="text-muted-foreground"> — {item.text}</span> : null}
+            {item.text ? <span className="opacity-85"> — {item.text}</span> : null}
         </p>
     );
 }
@@ -182,8 +182,8 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
     return (
         <div
             className={[
-                "relative bg-secondary-500/20 p-6 max-w-md shadow-lg border border-secondary-500 rounded-lg",
-                "bg-linear-to-b from-secondary-500/30 to-secondary-500/20",
+                "relative bg-brand-100/20 p-6 max-w-md shadow-lg border border-brand-500 rounded-lg",
+                "bg-linear-to-b from-brand-100/20 to-brand-200/20",
                 className ?? "",
             ].join(" ")}
         >
@@ -198,7 +198,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                     <p className="text-sm text-muted-foreground italic">{type}</p>
                 )}
                 {wildCard && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider bg-tertiary-500/20 text-tertiary-500 rounded">
+                    <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider bg-brand-500/20 text-brand-500 rounded">
                         Wild Card
                     </span>
                 )}
@@ -287,7 +287,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                                     key={index}
                                     className={[
                                         "px-2 py-0.5 rounded text-xs",
-                                        isMajor ? "bg-tertiary-900 text-tertiary-100" : "bg-secondary-900 text-secondary-100",
+                                        isMajor ? "bg-tertiary-100 text-tertiary-500" : "bg-brand-100/20",
                                     ].join(" ")}
                                 >
                                     {name} ({typeTag})
