@@ -123,3 +123,54 @@
 .theme-imperial.dark {
     --text-page: #fff8e6;
 }
+
+/* ---------------------------------------------------------
+   D&D PARCHMENT THEME
+   Warm parchment + classic 5e red accents
+--------------------------------------------------------- */
+
+.theme-parchment {
+    /* Brand — classic 5e-ish crimson / oxblood */
+    --color-brand-50:  #fff7ed; /* warm paper highlight */
+    --color-brand-100: #ffedd5;
+    --color-brand-200: #fed7aa;
+    --color-brand-300: #fdba74;
+    --color-brand-400: #fb923c;
+    --color-brand-500: #b91c1c; /* deep red accent (primary) */
+    --color-brand-600: #991b1b;
+    --color-brand-700: #7f1d1d;
+    --color-brand-800: #651616;
+    --color-brand-900: #450a0a;
+
+    /* Secondary — parchment browns / inked sepia */
+    --color-secondary-100: #f6f0e4; /* parchment base */
+    --color-secondary-500: #8a6f4d; /* sepia ink */
+    --color-secondary-900: #3a2c1a; /* deep brown */
+
+    /* Tertiary — subtle “wax / highlight” golds */
+    --color-tertiary-100: #fef3c7;
+    --color-tertiary-500: #d97706;
+    --color-tertiary-900: #78350f;
+
+    /* Surfaces */
+    --color-surface-light: #f6f0e4; /* parchment */
+    --color-surface-dark:  #120f0b; /* near-black brown */
+
+    /* Borders */
+    --color-border-subtle: #c8b79c; /* paper edge */
+    --color-border-strong: #8a6f4d; /* sepia ink */
+
+    /* Text */
+    --text-page: #2b2116; /* warm ink */
+}
+
+.theme-parchment.dark {
+    /* Dark mode keeps the “ink + parchment” vibe (paper becomes dark leather) */
+    --color-surface-light: #16120c;
+    --color-surface-dark:  #0d0b07;
+
+    --color-border-subtle: #3b2f1f;
+    --color-border-strong: #6b5539;
+
+    --text-page: #f3ead8; /* pale parchment ink */
+}
