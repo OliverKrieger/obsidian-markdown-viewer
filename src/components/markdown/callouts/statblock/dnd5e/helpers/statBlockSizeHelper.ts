@@ -19,7 +19,7 @@ function sectionTextLen(sec?: SectionLike) {
     return descLen + entriesLen;
 }
 
-export function statBlockWeight(sb: {
+export function dnd5eStatBlockWeight(sb: {
     desc?: string;
     traits?: SectionLike;
     actions?: SectionLike;

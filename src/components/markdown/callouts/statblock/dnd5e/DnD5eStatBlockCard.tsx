@@ -2,7 +2,7 @@ import React from "react";
 import type { Dnd5eStatBlock, ManifestLike } from "../types";
 import { OrnamentBorder, StatDivider } from "../render/Shared";
 import { StatBlockSection } from "../render/shared/StatBlockSection";
-import { statBlockWeight } from "./helpers/statBlockSizeHelper";
+import { dnd5eStatBlockWeight } from "./helpers/statBlockSizeHelper";
 
 import { parseAC, parseCR, parseHP } from "./helpers/parseBasics";
 import { Dnd5eHeader } from "./components/Dnd5eHeader";
@@ -50,7 +50,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
 
     const subtitle = [size, creatureType, alignment].filter(Boolean).join(" ");
 
-    const weight = statBlockWeight({
+    const weight = dnd5eStatBlockWeight({
         desc,
         traits,
         actions,

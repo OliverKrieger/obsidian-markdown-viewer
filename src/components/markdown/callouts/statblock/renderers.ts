@@ -1,5 +1,5 @@
 import type { NormalizedStatBlock, ManifestLike } from "./types";
-import { SwadeStatBlockCard } from "./render/SwadeStatBlockCard";
+import { SwadeStatBlockCard } from "./swade/SwadeStatBlockCard";
 import { Dnd5eStatBlockCard } from "./dnd5e/DnD5eStatBlockCard";
 import { FallbackStatBlockCard } from "./render/FallbackStatBlcokCard";
 
