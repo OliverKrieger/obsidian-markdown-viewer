@@ -16,8 +16,6 @@ function extractLines(blockquoteNode: HastNode, headerLine: string) {
 		.replace(/\r\n/g, "\n")
 		.replace(/\r/g, "\n");
 
-	console.log("[statblock] RAW >>>\n" + raw + "\n<<< END RAW");
-
 	const header = headerLine.trim();
 
 	const lines = raw

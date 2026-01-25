@@ -62,7 +62,6 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
         special,
     });
 
-    // Tune thresholds to taste
     const isLarge = weight >= 900;
     const isMedium = weight >= 450;
 
@@ -72,6 +71,8 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             ? "max-w-md md:max-w-2xl xl:max-w-3xl 2xl:max-w-5xl"
             : "max-w-md md:max-w-lg xl:max-w-xl";
 
+    // Choose your column behavior
+    const colsClass = isLarge ? "cols-large" : "cols-small";
 
     return (
         <div
@@ -81,47 +82,48 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
                 className ?? "",
             ].join(" ")}
         >
-
             <OrnamentBorder />
 
-            <Dnd5eHeader title={title} subtitle={subtitle} desc={desc} />
+            {/* EVERYTHING participates in columns now */}
+            <div className={["statblock-columns", colsClass].join(" ")}>
+                {/* MAIN BLOCK AS FIRST COLUMN ITEM */}
+                <div>
+                    <Dnd5eHeader title={title} subtitle={subtitle} desc={desc} />
 
-            <StatDivider />
+                    <StatDivider />
 
-            <Dnd5eBasicStats
-                armorClass={armorClass}
-                acRaw={ac}
-                armorType={armorType}
-                hitPoints={hitPoints}
-                hpRaw={hp}
-                hitDice={hitDice}
-                speed={speed}
-            />
+                    <Dnd5eBasicStats
+                        armorClass={armorClass}
+                        acRaw={ac}
+                        armorType={armorType}
+                        hitPoints={hitPoints}
+                        hpRaw={hp}
+                        hitDice={hitDice}
+                        speed={speed}
+                    />
 
-            <StatDivider />
+                    <StatDivider />
 
-            <Dnd5eAbilityGrid abilities={abilities} />
+                    <Dnd5eAbilityGrid abilities={abilities} />
 
-            <StatDivider />
+                    <StatDivider />
 
-            <Dnd5eAdditionalStats
-                saves={saves}
-                skills={skills}
-                resistances={resistances}
-                immunities={immunities}
-                vulnerabilities={vulnerabilities}
-                conditionImmunities={conditionImmunities}
-                senses={senses}
-                languages={languages}
-                challengeRating={challengeRating}
-                crRaw={cr}
-                proficiencyBonus={proficiencyBonus}
-            />
+                    <Dnd5eAdditionalStats
+                        saves={saves}
+                        skills={skills}
+                        resistances={resistances}
+                        immunities={immunities}
+                        vulnerabilities={vulnerabilities}
+                        conditionImmunities={conditionImmunities}
+                        senses={senses}
+                        languages={languages}
+                        challengeRating={challengeRating}
+                        crRaw={cr}
+                        proficiencyBonus={proficiencyBonus}
+                    />
+                </div>
 
-            <StatDivider />
-
-            {/* WATERFALL SECTION AREA */}
-            <div className="statblock-columns">
+                {/* SECTIONS (each already a column item via the CSS `> *`) */}
                 {traits?.entries?.length ? (
                     <StatBlockSection title="Traits" desc={traits.desc}>
                         <div className="space-y-2 text-sm">

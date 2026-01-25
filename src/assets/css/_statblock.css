@@ -5,7 +5,7 @@
 /* Waterfall multi-column layout for statblock sections */
 .statblock-columns {
   /* mobile: 1 column */
-  column-width: 22rem;     /* target column width */
+  column-width: 26rem;     /* target column width */
   column-gap: 1.25rem;
   column-fill: balance;    /* nice distribution */
 }
