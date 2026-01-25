@@ -1,4 +1,3 @@
-// src/.../render/SwadeStatBlockCard.tsx
 import React from "react";
 import type { ManifestLike, SwadeStatBlock } from "../types";
 import { DiamondDivider } from "../render/Shared";
