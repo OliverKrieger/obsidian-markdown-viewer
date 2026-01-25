@@ -195,6 +195,73 @@ Each section:
 
 ---
 
+### Template (5e)
+
+```md
+> [!statblock] CREATURE NAME
+>
+> ruleset: dnd5e
+> size: Medium
+> creatureType: humanoid (any)
+> alignment: neutral
+> desc: Optional high-level description of the creature, its role, or encounter intent.
+>
+> ac: 15 (natural armor)
+> hp: 45 (6d8 + 18)
+> speed: 30 ft.
+>
+> abilities: STR 14 (+2), DEX 12 (+1), CON 16 (+3), INT 10 (+0), WIS 11 (+0), CHA 13 (+1)
+> saves: Dex +3, Wis +2
+> skills: Perception +4, Stealth +3
+> resistances: —
+> immunities: —
+> vulnerabilities: —
+> conditionImmunities: —
+> senses: darkvision 60 ft., passive Perception 14
+> languages: Common
+> cr: 3 (700 XP) (+2)
+>
+> traits:
+> desc: Passive or always-on abilities.
+> Trait Name: Description text.
+> [[Linked Trait]]
+>
+> actions:
+> desc: Standard action options.
+> Action Name: Attack or effect description.
+> Multiattack: Description of multiple attacks.
+>
+> bonusActions:
+> desc: Optional. Use for bosses or agile creatures.
+> Bonus Action Name: Description.
+>
+> reactions:
+> desc: Optional. Interrupt-style abilities.
+> Reaction Name: Trigger and effect.
+>
+> legendaryActions:
+> desc: Optional. Explain how many actions per round and any phase rules.
+> Legendary Action Name: Effect.
+> Another Legendary Action (Costs 2 Actions): Effect.
+>
+> spells:
+> desc: Optional spellcasting section.
+> At will: [[Spell]], [[Spell]]
+> 3/day each: [[Spell]]
+> 1/day: [[Spell]]
+>
+> feats:
+> desc: Optional feats or feat-like abilities.
+> [[Feat Name]]
+> Feat Name: Custom rule text.
+>
+> special:
+> desc: Catch-all for mythic traits, phase changes, lair effects, or encounter rules.
+> Special Rule Name: Description.
+```
+
+---
+
 ## 🎲 Savage Worlds (SWADE) Statblocks
 
 ### Minimal Example
@@ -319,6 +386,48 @@ Example:
 > Smoke Bombs x3 (Creates Medium Obscurement in a Small Burst Template for 1d4 rounds)
 > Healing Poultices x2 (Treat as a Healing skill roll at +1 once per poultice)
 > Survival Kit (Rations, water skin, flint, tinder, needle, thread, spare cloak)
+```
+
+---
+
+### Template (SWADE)
+
+```md
+> [!statblock] CHARACTER NAME
+>
+> ruleset: swade
+> type: Species • Wild Card / Extra • Archetype
+> desc: Optional short narrative description. Use this to summarise role, vibe, or purpose.
+>
+> attributes: Agi d6, Sma d6, Spi d6, Str d6, Vig d6
+> skills: Skill d6, Another Skill d8, Notice d6
+> pace: 6
+> parry: 5
+> toughness: 6(0)
+> cha: 0
+>
+> edges:
+> desc: Optional description for the section. Explains how these edges work together or special rulings.
+> [[Edge Name]]
+> Edge Name: Optional rules text or clarification.
+> Another Edge
+>
+> hindrances:
+> desc: Optional description. Use (Major)/(Minor) in names if desired.
+> Hindrance Name (Minor): Optional flavour or reminder text.
+> Another Hindrance (Major)
+>
+> special:
+> desc: Special abilities, passive effects, or setting rules. Can include links.
+> Ability Name: Description text.
+> [[Linked Ability]]: Optional extra text.
+> Passive Trait
+>
+> gear:
+> desc: Equipment carried. Text in parentheses is rendered as stats.
+> Item Name (Stats, bonuses, notes)
+> Another Item
+> Consumable x3 (Effect summary)
 ```
 
 ---
