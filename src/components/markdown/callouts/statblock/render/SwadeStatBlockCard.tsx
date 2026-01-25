@@ -135,15 +135,15 @@ function AbilityLine({
 }) {
     return (
         <p className="text-sm">
-            {showDash ? <span className="opacity-85">• </span> : null}
+            {showDash ? <span className="opacity-75">• </span> : null}
             <span className="font-semibold">{item.name}</span>
             {item.ref ? (
                 <>
-                    <span className="opacity-85"> — </span>
+                    <span className="opacity-75"> — </span>
                     <AbilityRef refName={item.ref} manifest={manifest} />
                 </>
             ) : null}
-            {item.text ? <span className="opacity-85"> — {item.text}</span> : null}
+            {item.text ? <span className="opacity-75"> — {item.text}</span> : null}
         </p>
     );
 }
@@ -304,7 +304,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                             <p key={i} className="text-sm">
                                 <span className="font-semibold italic text-brand-500">{a.name}:</span>{" "}
                                 {a.ref ? <AbilityRef refName={a.ref} manifest={manifest} /> : null}
-                                {a.text ? <span className="text-muted-foreground"> {a.text}</span> : null}
+                                {a.text ? <span className="opacity-75"> {a.text}</span> : null}
                             </p>
                         ))}
                     </div>
@@ -324,7 +324,7 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                                 <p key={i}>
                                     <span className="font-medium">{name}</span>
                                     {stats ? (
-                                        <span className="text-muted-foreground text-xs ml-1">({stats})</span>
+                                        <span className="opacity-75 text-xs ml-1">({stats})</span>
                                     ) : null}
                                 </p>
                             );
