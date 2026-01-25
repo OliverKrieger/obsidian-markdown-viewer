@@ -4,32 +4,32 @@
 --------------------------------------------------------- */
 @utility heading-1 {
     @apply text-4xl font-extrabold tracking-tight font-display mb-6 mt-10 scroll-mt-24;
-    color: var(--color-brand-300);
+    color: var(--color-brand-500);
 }
 
 @utility heading-2 {
     @apply text-3xl font-bold tracking-tight font-display mt-10 mb-4 scroll-mt-24;
-    color: var(--color-brand-200);
+    color: var(--color-brand-400);
 }
 
 @utility heading-3 {
     @apply text-2xl font-semibold font-display mt-8 mb-3 scroll-mt-20;
-    color: var(--color-brand-100);
+    color: var(--color-brand-400);
 }
 
 @utility heading-4 {
     @apply text-xl font-semibold font-display mt-6 mb-2 scroll-mt-20;
-    color: var(--color-neutral-200);
+    color: var(--color-neutral-400);
 }
 
 @utility heading-5 {
     @apply text-lg font-medium mt-4 mb-1 scroll-mt-16;
-    color: var(--color-neutral-300);
+    color: var(--color-neutral-400);
 }
 
 @utility heading-6 {
     @apply text-base font-medium uppercase tracking-wide mt-3 mb-1 scroll-mt-16;
-    color: var(--color-neutral-400);
+    color: var(--color-neutral-500);
 }
 
 /* ---------------------------------------------------------
