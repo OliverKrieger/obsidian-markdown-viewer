@@ -5,36 +5,14 @@ export type ManifestLike = {
     pageMeta?: Record<string, any>;
 };
 
-export type StatBlockAbilityRef = {
-    name: string;          // display label
-    text?: string;         // inline description (optional)
-    ref?: string;          // wikilink target (optional)
-};
-
-export type SwadeStatBlock = {
-    ruleset: "swade";
-    title: string;
-
-    type?: string; // e.g. "Human (Wild Card)"
+export type SectionBlock<TEntry> = {
     desc?: string;
-
-    attributes?: Record<string, string>; // Agi -> d10
-    skills?: Record<string, string>;     // Fighting -> d8
-
-    pace?: string;
-    parry?: string;
-    toughness?: string;
-    charisma?: string;
-
-    edges?: StatBlockAbilityRef[];
-    hindrances?: StatBlockAbilityRef[];
-    gear?: string[];
-
-    special?: StatBlockAbilityRef[];
-
-    className?: string;
-    variant?: "compact" | "default";
+    entries: TEntry[];
 };
+
+// -------------------------
+// D&D 5e
+// -------------------------
 
 export type Dnd5eAction = {
     name: string;
@@ -45,7 +23,13 @@ export type Dnd5eAction = {
 export type Dnd5eStatBlock = {
     ruleset: "dnd5e";
     title: string;
+    variant: "classic" | "compact";
+    className?: string;
 
+    // top-level meta
+    desc?: string;
+
+    // core fields
     size?: string;
     creatureType?: string;
     alignment?: string;
@@ -54,34 +38,68 @@ export type Dnd5eStatBlock = {
     hp?: string;
     speed?: string;
 
-    abilities?: {
-        STR?: { score: number; mod: string };
-        DEX?: { score: number; mod: string };
-        CON?: { score: number; mod: string };
-        INT?: { score: number; mod: string };
-        WIS?: { score: number; mod: string };
-        CHA?: { score: number; mod: string };
-    };
+    abilities?: Record<string, { score: number; mod: string }> | undefined;
 
     saves?: string;
     skills?: string;
-    immunities?: string;
+
     resistances?: string;
+    immunities?: string;
     vulnerabilities?: string;
     conditionImmunities?: string;
 
     senses?: string;
     languages?: string;
-
     cr?: string;
 
-    traits?: Dnd5eAction[];
-    actions?: Dnd5eAction[];
-    reactions?: Dnd5eAction[];
-    legendaryActions?: Dnd5eAction[];
+    // sectioned blocks (NEW SHAPE)
+    traits?: SectionBlock<Dnd5eAction>;
+    actions?: SectionBlock<Dnd5eAction>;
+    reactions?: SectionBlock<Dnd5eAction>;
+    legendaryActions?: SectionBlock<Dnd5eAction>;
 
+    // Optional future sections (you can add later without refactors)
+    bonusActions?: SectionBlock<Dnd5eAction>;
+    spells?: SectionBlock<Dnd5eAction>;
+    feats?: SectionBlock<Dnd5eAction>;
+    special?: SectionBlock<Dnd5eAction>;
+};
+
+// -------------------------
+// SWADE
+// -------------------------
+
+export type StatBlockAbilityRef = {
+    name: string;
+    text?: string;
+    ref?: string;
+};
+
+export type SwadeStatBlock = {
+    ruleset: "swade";
+    title: string;
+    variant: "default" | "compact";
     className?: string;
-    variant?: "classic" | "compact";
+
+    // top-level meta
+    desc?: string;
+    type?: string;
+
+    attributes?: Record<string, string>;
+    skills?: Record<string, string>;
+
+    pace?: string;
+    parry?: string;
+    toughness?: string;
+    charisma?: string;
+
+    // sectioned blocks (NEW SHAPE)
+    edges?: SectionBlock<StatBlockAbilityRef>;
+    hindrances?: SectionBlock<StatBlockAbilityRef>;
+    special?: SectionBlock<StatBlockAbilityRef>;
+
+    // gear is just strings today
+    gear?: SectionBlock<string>;
 };
 
 export type UnknownStatBlock = {

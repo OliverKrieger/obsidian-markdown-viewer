@@ -1,4 +1,4 @@
-import type { StatBlockAbilityRef, SwadeStatBlock } from "./types";
+import type { SectionBlock, StatBlockAbilityRef, SwadeStatBlock } from "./types";
 
 function normaliseKey(k: string) {
     return k.trim().toLowerCase();
@@ -17,7 +17,7 @@ function splitInlinePairs(s: string): Record<string, string> {
     return out;
 }
 
-function parseAbilityBullet(line: string): StatBlockAbilityRef | null {
+function parseAbilityLine(line: string): StatBlockAbilityRef | null {
     const cleaned = line.replace(/^\s*-\s*/, "").trim();
     if (!cleaned) return null;
 
@@ -28,19 +28,13 @@ function parseAbilityBullet(line: string): StatBlockAbilityRef | null {
     }
 
     const idx = cleaned.indexOf(":");
-    if (idx === -1) {
-        if (cleaned.length > 0) return { name: cleaned };
-        return null;
-    }
+    if (idx === -1) return { name: cleaned };
 
     const name = cleaned.slice(0, idx).trim();
     const rest = cleaned.slice(idx + 1).trim();
 
     const linkOnly = rest.match(/^\[\[(.+?)\]\]$/);
-    if (linkOnly) {
-        const ref = linkOnly[1].trim();
-        return { name, ref };
-    }
+    if (linkOnly) return { name, ref: linkOnly[1].trim() };
 
     const embedded = rest.match(/\[\[(.+?)\]\]/);
     if (embedded) {
@@ -52,7 +46,23 @@ function parseAbilityBullet(line: string): StatBlockAbilityRef | null {
     return { name, text: rest || undefined };
 }
 
-type Section = "edges" | "hindrances" | "gear" | "special" | null;
+type SectionKey = "edges" | "hindrances" | "gear" | "special" | null;
+
+function ensureAbilitySection(sb: SwadeStatBlock, key: Exclude<SectionKey, "gear" | null>): SectionBlock<StatBlockAbilityRef> {
+    const existing = sb[key] as SectionBlock<StatBlockAbilityRef> | undefined;
+    if (existing) return existing;
+    const created: SectionBlock<StatBlockAbilityRef> = { entries: [] };
+    (sb as any)[key] = created;
+    return created;
+}
+
+function ensureGearSection(sb: SwadeStatBlock): SectionBlock<string> {
+    const existing = sb.gear as SectionBlock<string> | undefined;
+    if (existing) return existing;
+    const created: SectionBlock<string> = { entries: [] };
+    sb.gear = created;
+    return created;
+}
 
 export function parseSwade(lines: string[], title: string): SwadeStatBlock {
     const sb: SwadeStatBlock = {
@@ -61,87 +71,72 @@ export function parseSwade(lines: string[], title: string): SwadeStatBlock {
         variant: "default",
     };
 
-    let section: Section = null;
+    let section: SectionKey = null;
+
+    const topLevelKeys = new Set([
+        "ruleset",
+        "type",
+        "desc",
+        "description",
+        "attributes",
+        "skills",
+        "pace",
+        "parry",
+        "toughness",
+        "tough",
+        "charisma",
+        "cha",
+        "class",
+        "classname",
+        "variant",
+    ]);
 
     for (const rawLine of lines) {
         const line = rawLine.trim();
         if (!line) continue;
 
         // section headers
-        if (/^edges\s*:?\s*$/i.test(line)) {
-            section = "edges";
-            sb.edges ??= [];
-            continue;
-        }
-        if (/^hindrances\s*:?\s*$/i.test(line)) {
-            section = "hindrances";
-            sb.hindrances ??= [];
-            continue;
-        }
-        if (/^gear\s*:?\s*$/i.test(line)) {
-            section = "gear";
-            sb.gear ??= [];
-            continue;
-        }
-        if (/^special\s*:?\s*$/i.test(line) || /^special abilities\s*:?\s*$/i.test(line)) {
-            section = "special";
-            sb.special ??= [];
-            continue;
-        }
+        const h = line.replace(/\s*:?\s*$/, "").toLowerCase();
+        if (h === "edges") { section = "edges"; ensureAbilitySection(sb, "edges"); continue; }
+        if (h === "hindrances") { section = "hindrances"; ensureAbilitySection(sb, "hindrances"); continue; }
+        if (h === "gear") { section = "gear"; ensureGearSection(sb); continue; }
+        if (h === "special" || h === "special abilities") { section = "special"; ensureAbilitySection(sb, "special"); continue; }
 
-        // section mode: accept BOTH bullets and plain lines
+        // section mode
         if (section) {
-            // If we hit a top-level key:value line, exit section and fall through
-            if (/^[\w-]+\s*:/.test(line)) {
-                const k = normaliseKey(line.slice(0, line.indexOf(":")));
-                const isTopLevelKey = new Set([
-                    "ruleset",
-                    "type",
-                    "desc",
-                    "description",
-                    "attributes",
-                    "skills",
-                    "pace",
-                    "parry",
-                    "toughness",
-                    "tough",
-                    "charisma",
-                    "cha",
-                    "class",
-                    "classname",
-                    "variant",
-                ]).has(k);
+            // section-local desc:
+            if (/^desc\s*:/i.test(line) || /^description\s*:/i.test(line)) {
+                const idx = line.indexOf(":");
+                const value = line.slice(idx + 1).trim();
+                if (value) {
+                    if (section === "gear") ensureGearSection(sb).desc = value;
+                    else ensureAbilitySection(sb, section as any).desc = value;
+                }
+                continue;
+            }
 
-                if (isTopLevelKey) {
-                    section = null; // fallthrough to parse key/value
+            // key:value line -> only exit section if it's a top-level key
+            if (/^[\w-]+\s*:/.test(line) && !line.startsWith("-")) {
+                const k = normaliseKey(line.slice(0, line.indexOf(":")));
+                if (topLevelKeys.has(k)) {
+                    section = null; // fallthrough to key:value parsing
                 } else {
-                    // treat as section entry (rare)
-                    if (section === "gear") {
-                        sb.gear!.push(line.replace(/^\s*-\s*/, "").trim());
-                    } else {
-                        const dashNormalised = line.replace(/\s+[—–-]\s+/, ": ");
-                        const ability = parseAbilityBullet(dashNormalised);
-                        if (ability) {
-                            if (section === "edges") sb.edges!.push(ability);
-                            if (section === "hindrances") sb.hindrances!.push(ability);
-                            if (section === "special") sb.special!.push(ability);
-                        }
+                    // treat as section entry (e.g. "Marksman: text")
+                    if (section === "gear") ensureGearSection(sb).entries.push(line.replace(/^\s*-\s*/, "").trim());
+                    else {
+                        const ability = parseAbilityLine(line.replace(/\s+[—–-]\s+/, ": "));
+                        if (ability) ensureAbilitySection(sb, section as any).entries.push(ability);
                     }
                     continue;
                 }
             } else {
-                // Plain section entry (most common)
+                // normal section entry
                 if (section === "gear") {
-                    sb.gear!.push(line.replace(/^\s*-\s*/, "").trim());
+                    ensureGearSection(sb).entries.push(line.replace(/^\s*-\s*/, "").trim());
                 } else {
-                    // Support "Name — text" by normalising to "Name: text"
                     const dashNormalised = line.replace(/\s+[—–-]\s+/, ": ");
-                    const ability = parseAbilityBullet(dashNormalised);
-                    if (ability) {
-                        if (section === "edges") sb.edges!.push(ability);
-                        if (section === "hindrances") sb.hindrances!.push(ability);
-                        if (section === "special") sb.special!.push(ability);
-                    }
+                    const ability = parseAbilityLine(dashNormalised);
+                    if (ability) ensureAbilitySection(sb, section as any).entries.push(ability);
                 }
                 continue;
             }
@@ -205,10 +200,16 @@ export function parseSwade(lines: string[], title: string): SwadeStatBlock {
         }
     }
 
-    if (sb.edges?.length === 0) delete sb.edges;
-    if (sb.hindrances?.length === 0) delete sb.hindrances;
-    if (sb.special?.length === 0) delete sb.special;
-    if (sb.gear?.length === 0) delete sb.gear;
+    // clean empty sections
+    const cleanAbilitySection = (k: "edges" | "hindrances" | "special") => {
+        const sec = sb[k];
+        if (sec && sec.entries.length === 0 && !sec.desc) delete (sb as any)[k];
+    };
+    cleanAbilitySection("edges");
+    cleanAbilitySection("hindrances");
+    cleanAbilitySection("special");
+
+    if (sb.gear && sb.gear.entries.length === 0 && !sb.gear.desc) delete sb.gear;
 
     return sb;
 }

@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import type { ManifestLike, StatBlockAbilityRef, SwadeStatBlock } from "../types";
 import { AttributeBox, DiamondDivider, StatPill, WildCardBadge } from "./Shared";
 import { WikiLink } from "../../../WikiLink";
+import { StatBlockSection } from "./shared/StatBlockSection";
 
 function parseWildCard(type?: string) {
     if (!type) return false;
@@ -157,24 +158,24 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
     parry,
     toughness,
     charisma,
+
     edges,
     hindrances,
     gear,
     special,
+
     className,
     manifest,
 }) => {
     const wildCard = parseWildCard(type);
     const { tough, armor } = parseToughnessAndArmor(toughness);
 
-    // Attributes: handle both long/short keys gracefully
     const agi = attributes?.Agi ?? attributes?.agility ?? "—";
     const sma = attributes?.Sma ?? attributes?.smarts ?? "—";
     const spi = attributes?.Spi ?? attributes?.spirit ?? "—";
     const str = attributes?.Str ?? attributes?.strength ?? "—";
     const vig = attributes?.Vig ?? attributes?.vigor ?? "—";
 
-    // Skills: turn map -> list in stable order (alpha)
     const skillsList = skills
         ? Object.entries(skills).sort(([a], [b]) => a.localeCompare(b))
         : [];
@@ -194,21 +195,19 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                 <h1 className="font-serif text-2xl font-bold text-brand-500 tracking-wide">
                     {title}
                 </h1>
-                {type && (
-                    <p className="text-sm text-muted-foreground italic">{type}</p>
-                )}
-                {wildCard && (
+                {type ? <p className="text-sm text-muted-foreground italic">{type}</p> : null}
+                {wildCard ? (
                     <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider bg-brand-500/20 text-brand-500 rounded">
                         Wild Card
                     </span>
-                )}
+                ) : null}
             </header>
 
-            {desc && (
+            {desc ? (
                 <p className="text-sm text-muted-foreground italic text-center mb-4 whitespace-pre-wrap">
                     {desc}
                 </p>
-            )}
+            ) : null}
 
             <DiamondDivider />
 
@@ -230,7 +229,11 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             <div className="grid grid-cols-4 gap-2 mb-4">
                 <StatPill label="Pace" value={pace ?? "—"} />
                 <StatPill label="Parry" value={parry ?? "—"} />
-                <StatPill label="Tough" value={tough ?? (toughness ?? "—")} subValue={armor != null ? `(${armor})` : undefined} />
+                <StatPill
+                    label="Tough"
+                    value={tough ?? (toughness ?? "—")}
+                    subValue={armor != null ? `(${armor})` : undefined}
+                />
                 <StatPill label="Cha" value={charisma ?? "—"} />
             </div>
 
@@ -255,31 +258,26 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
             )}
 
             {/* Edges */}
-            {edges && edges.length > 0 && (
-                <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
-                        Edges
-                    </h2>
+            {edges && edges.entries.length > 0 && (
+                <StatBlockSection title="Edges" desc={edges.desc}>
                     <div className="space-y-1">
-                        {edges.map((e, i) => (
+                        {edges.entries.map((e, i) => (
                             <AbilityLine key={i} item={e} manifest={manifest} showDash={false} />
                         ))}
                     </div>
-                </div>
+                </StatBlockSection>
             )}
 
             {/* Hindrances */}
-            {hindrances && hindrances.length > 0 && (
-                <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
-                        Hindrances
-                    </h2>
+            {hindrances && hindrances.entries.length > 0 && (
+                <StatBlockSection title="Hindrances" desc={hindrances.desc}>
                     <div className="flex flex-wrap gap-2 text-sm">
-                        {hindrances.map((h, index) => {
-                            // If author used "Wanted (Major)" keep as-is; else default "Minor"
+                        {hindrances.entries.map((h, index) => {
                             const m = h.name.match(/^(.*)\((Major|Minor)\)\s*$/i);
                             const name = m ? m[1].trim() : h.name;
-                            const typeTag = m ? (m[2][0].toUpperCase() + m[2].slice(1).toLowerCase()) : "Minor";
+                            const typeTag = m
+                                ? m[2][0].toUpperCase() + m[2].slice(1).toLowerCase()
+                                : "Minor";
 
                             const isMajor = typeTag.toLowerCase() === "major";
                             return (
@@ -295,17 +293,14 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                             );
                         })}
                     </div>
-                </div>
+                </StatBlockSection>
             )}
 
             {/* Special */}
-            {special && special.length > 0 && (
-                <div className="mb-4">
-                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
-                        Special Abilities
-                    </h2>
+            {special && special.entries.length > 0 && (
+                <StatBlockSection title="Special Abilities" desc={special.desc}>
                     <div className="space-y-2">
-                        {special.map((a, i) => (
+                        {special.entries.map((a, i) => (
                             <p key={i} className="text-sm">
                                 <span className="font-semibold italic text-brand-500">{a.name}:</span>{" "}
                                 {a.ref ? <AbilityRef refName={a.ref} manifest={manifest} /> : null}
@@ -313,17 +308,14 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                             </p>
                         ))}
                     </div>
-                </div>
+                </StatBlockSection>
             )}
 
             {/* Gear */}
-            {gear && gear.length > 0 && (
-                <div>
-                    <h2 className="font-serif text-sm font-bold text-brand-500 uppercase tracking-wider mb-2">
-                        Gear
-                    </h2>
+            {gear && gear.entries.length > 0 && (
+                <StatBlockSection title="Gear" desc={gear.desc}>
                     <div className="text-sm space-y-1">
-                        {gear.map((g, i) => {
+                        {gear.entries.map((g, i) => {
                             const m = g.match(/^(.+?)\s*\((.+)\)\s*$/);
                             const name = m ? m[1].trim() : g;
                             const stats = m ? m[2].trim() : undefined;
@@ -331,14 +323,14 @@ export const SwadeStatBlockCard: React.FC<SwadeStatBlock & { manifest?: Manifest
                             return (
                                 <p key={i}>
                                     <span className="font-medium">{name}</span>
-                                    {stats && (
+                                    {stats ? (
                                         <span className="text-muted-foreground text-xs ml-1">({stats})</span>
-                                    )}
+                                    ) : null}
                                 </p>
                             );
                         })}
                     </div>
-                </div>
+                </StatBlockSection>
             )}
         </div>
     );

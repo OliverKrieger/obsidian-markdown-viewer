@@ -1,11 +1,10 @@
-import type { Dnd5eAction, Dnd5eStatBlock } from "./types";
+import type { Dnd5eAction, Dnd5eStatBlock, SectionBlock } from "./types";
 
 function normaliseKey(k: string) {
     return k.trim().toLowerCase();
 }
 
 function parseAbilities(value: string): Dnd5eStatBlock["abilities"] {
-    // "STR 30 (+10), DEX 10 (+0), ..."
     const out: any = {};
     const parts = value.split(",").map((p) => p.trim()).filter(Boolean);
 
@@ -25,24 +24,21 @@ function parseSectionEntry(line: string): Dnd5eAction | null {
     const cleaned = line.replace(/^\s*-\s*/, "").trim();
     if (!cleaned) return null;
 
-    // "- [[Thing]]" OR "[[Thing]]"
+    // [[Thing]]
     const justLink = cleaned.match(/^\[\[(.+?)\]\]$/);
     if (justLink) {
         const ref = justLink[1].trim();
         return { name: ref, ref };
     }
 
-    // "Name: rest"
+    // Name: rest
     const idxColon = cleaned.indexOf(":");
     if (idxColon !== -1) {
         const name = cleaned.slice(0, idxColon).trim();
         const rest = cleaned.slice(idxColon + 1).trim();
 
         const linkOnly = rest.match(/^\[\[(.+?)\]\]$/);
-        if (linkOnly) {
-            const ref = linkOnly[1].trim();
-            return { name, ref };
-        }
+        if (linkOnly) return { name, ref: linkOnly[1].trim() };
 
         const embedded = rest.match(/\[\[(.+?)\]\]/);
         if (embedded) {
@@ -54,7 +50,7 @@ function parseSectionEntry(line: string): Dnd5eAction | null {
         return { name, text: rest || undefined };
     }
 
-    // "Name. rest" (common in 5e traits like "Legendary Resistance (3/Day). If...")
+    // Name. rest
     const idxDot = cleaned.indexOf(".");
     if (idxDot > 0) {
         const name = cleaned.slice(0, idxDot).trim();
@@ -62,12 +58,27 @@ function parseSectionEntry(line: string): Dnd5eAction | null {
         if (name && rest) return { name, text: rest };
     }
 
-    // fallback: treat entire line as name
     return { name: cleaned };
 }
 
+type SectionKey =
+    | "traits"
+    | "actions"
+    | "reactions"
+    | "legendaryActions"
+    | "bonusActions"
+    | "spells"
+    | "feats"
+    | "special"
+    | null;
 
-type Section = "traits" | "actions" | "reactions" | "legendaryActions" | null;
+function ensureSection(sb: Dnd5eStatBlock, key: Exclude<SectionKey, null>): SectionBlock<Dnd5eAction> {
+    const existing = sb[key] as SectionBlock<Dnd5eAction> | undefined;
+    if (existing) return existing;
+    const created: SectionBlock<Dnd5eAction> = { entries: [] };
+    (sb as any)[key] = created;
+    return created;
+}
 
 export function parseDnd5e(lines: string[], title: string): Dnd5eStatBlock {
     const sb: Dnd5eStatBlock = {
@@ -76,102 +87,92 @@ export function parseDnd5e(lines: string[], title: string): Dnd5eStatBlock {
         variant: "classic",
     };
 
-    let section: Section = null;
+    let section: SectionKey = null;
+
+    const topLevelKeys = new Set([
+        "ruleset",
+        "desc",
+        "size",
+        "creaturetype",
+        "type",
+        "alignment",
+        "ac",
+        "armorclass",
+        "hp",
+        "hitpoints",
+        "speed",
+        "abilities",
+        "saves",
+        "savingthrows",
+        "skills",
+        "immunities",
+        "damageimmunities",
+        "resistances",
+        "damageresistances",
+        "vulnerabilities",
+        "damagevulnerabilities",
+        "conditionimmunities",
+        "senses",
+        "languages",
+        "cr",
+        "challenge",
+        "class",
+        "classname",
+        "variant",
+    ]);
 
     for (const rawLine of lines) {
         const line = rawLine.trim();
-
-        // section headers
-        if (/^traits\s*:\s*$/i.test(line)) {
-            section = "traits";
-            sb.traits ??= [];
-            continue;
-        }
-        if (/^actions\s*:\s*$/i.test(line)) {
-            section = "actions";
-            sb.actions ??= [];
-            continue;
-        }
-        if (/^reactions\s*:\s*$/i.test(line)) {
-            section = "reactions";
-            sb.reactions ??= [];
-            continue;
-        }
-        if (/^legendaryactions\s*:\s*$/i.test(line) || /^legendary actions\s*:\s*$/i.test(line)) {
-            section = "legendaryActions";
-            sb.legendaryActions ??= [];
-            continue;
-        }
-
-        // Always ignore empty lines (don’t end sections)
         if (!line) continue;
 
-        // If we're inside a section...
-        if (section) {
-            // If we hit another section header, switch (your header logic above already does continue)
-            // If we hit a normal key: value line (like "ac: ..."), we leave the section and fall through.
-            if (/^[\w-]+\s*:/.test(line) && !line.startsWith("-")) {
-                // IMPORTANT: only treat as "key: value" if the key is a known top-level field
-                // otherwise "Bite: ..." would incorrectly exit the actions section.
-                const k = normaliseKey(line.slice(0, line.indexOf(":")));
-                const isTopLevelKey = new Set([
-                    "ruleset",
-                    "size",
-                    "creaturetype",
-                    "type",
-                    "alignment",
-                    "ac",
-                    "armorclass",
-                    "hp",
-                    "hitpoints",
-                    "speed",
-                    "abilities",
-                    "saves",
-                    "savingthrows",
-                    "skills",
-                    "immunities",
-                    "damageimmunities",
-                    "resistances",
-                    "damageresistances",
-                    "vulnerabilities",
-                    "damagevulnerabilities",
-                    "conditionimmunities",
-                    "senses",
-                    "languages",
-                    "cr",
-                    "challenge",
-                    "class",
-                    "classname",
-                    "variant",
-                ]).has(k);
+        // section headers (colon optional)
+        const sectionHeader = line.replace(/\s*:?\s*$/, "").toLowerCase();
 
-                if (isTopLevelKey) {
-                    section = null; // fall through to key:value parsing
+        if (sectionHeader === "traits") { section = "traits"; ensureSection(sb, "traits"); continue; }
+        if (sectionHeader === "actions") { section = "actions"; ensureSection(sb, "actions"); continue; }
+        if (sectionHeader === "reactions") { section = "reactions"; ensureSection(sb, "reactions"); continue; }
+        if (sectionHeader === "legendaryactions" || sectionHeader === "legendary actions") {
+            section = "legendaryActions"; ensureSection(sb, "legendaryActions"); continue;
+        }
+
+        // optional future sections (won't break older blocks)
+        if (sectionHeader === "bonusactions" || sectionHeader === "bonus actions") {
+            section = "bonusActions"; ensureSection(sb, "bonusActions"); continue;
+        }
+        if (sectionHeader === "spells") { section = "spells"; ensureSection(sb, "spells"); continue; }
+        if (sectionHeader === "feats") { section = "feats"; ensureSection(sb, "feats"); continue; }
+        if (sectionHeader === "special") { section = "special"; ensureSection(sb, "special"); continue; }
+
+        // section mode
+        if (section) {
+            // allow section-local desc:
+            if (/^desc\s*:/i.test(line) || /^description\s*:/i.test(line)) {
+                const idx = line.indexOf(":");
+                const value = line.slice(idx + 1).trim();
+                if (value) ensureSection(sb, section).desc = value;
+                continue;
+            }
+
+            // if line is key:value, only exit section if it's a known TOP-LEVEL key
+            if (/^[\w-]+\s*:/.test(line) && !line.startsWith("-")) {
+                const k = normaliseKey(line.slice(0, line.indexOf(":")));
+                if (topLevelKeys.has(k)) {
+                    section = null; // fall through to parse key:value
                 } else {
-                    // It's a section entry like "Bite: ..." — parse it as an action/trait/etc.
+                    // treat as an entry like "Bite: ..."
                     const entry = parseSectionEntry(line);
-                    if (entry) {
-                        if (section === "traits") sb.traits!.push(entry);
-                        if (section === "actions") sb.actions!.push(entry);
-                        if (section === "reactions") sb.reactions!.push(entry);
-                        if (section === "legendaryActions") sb.legendaryActions!.push(entry);
-                    }
+                    if (entry) ensureSection(sb, section).entries.push(entry);
                     continue;
                 }
             } else {
-                // Bullet or plain line inside the section
+                // bullet or plain line entry
                 const entry = parseSectionEntry(line);
-                if (entry) {
-                    if (section === "traits") sb.traits!.push(entry);
-                    if (section === "actions") sb.actions!.push(entry);
-                    if (section === "reactions") sb.reactions!.push(entry);
-                    if (section === "legendaryActions") sb.legendaryActions!.push(entry);
-                }
+                if (entry) ensureSection(sb, section).entries.push(entry);
                 continue;
             }
         }
 
-
+        // top-level key:value
         const idx = line.indexOf(":");
         if (idx === -1) continue;
 
@@ -181,6 +182,11 @@ export function parseDnd5e(lines: string[], title: string): Dnd5eStatBlock {
 
         switch (key) {
             case "ruleset":
+                break;
+
+            case "desc":
+            case "description":
+                sb.desc = value;
                 break;
 
             case "size":
@@ -260,10 +266,12 @@ export function parseDnd5e(lines: string[], title: string): Dnd5eStatBlock {
         }
     }
 
-    if (sb.traits?.length === 0) delete sb.traits;
-    if (sb.actions?.length === 0) delete sb.actions;
-    if (sb.reactions?.length === 0) delete sb.reactions;
-    if (sb.legendaryActions?.length === 0) delete sb.legendaryActions;
+    // clean empty sections
+    const maybeDelete = (k: Exclude<SectionKey, null>) => {
+        const sec = sb[k] as SectionBlock<Dnd5eAction> | undefined;
+        if (sec && sec.entries.length === 0 && !sec.desc) delete (sb as any)[k];
+    };
+    (["traits", "actions", "reactions", "legendaryActions", "bonusActions", "spells", "feats", "special"] as const).forEach(maybeDelete);
 
     return sb;
 }

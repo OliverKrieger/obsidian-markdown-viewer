@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import type { Dnd5eAction, Dnd5eStatBlock, ManifestLike } from "../types";
 import { OrnamentBorder, StatDivider } from "./Shared";
 import { WikiLink } from "../../../WikiLink";
+import { StatBlockSection } from "./shared/StatBlockSection";
 
 function slugToHref(slug: string) {
     return `/page/${encodeURIComponent(slug)}`;
@@ -174,10 +175,18 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
     senses,
     languages,
     cr,
+
+    desc, // NEW (top-level optional), safe even if you don’t use it yet
+
     traits,
     actions,
     reactions,
     legendaryActions,
+    bonusActions,
+    spells,
+    feats,
+    special,
+
     className,
     manifest,
 }) => {
@@ -211,10 +220,16 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
                 <h1 className="font-serif text-2xl font-bold text-brand-500 tracking-wide">
                     {title}
                 </h1>
-                {subtitle && (
+                {subtitle ? (
                     <p className="text-sm italic text-muted-foreground">{subtitle}</p>
-                )}
+                ) : null}
             </header>
+
+            {desc ? (
+                <p className="text-sm italic text-muted-foreground mb-3 whitespace-pre-wrap">
+                    {desc}
+                </p>
+            ) : null}
 
             <StatDivider />
 
@@ -273,8 +288,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
                 )}
                 {skills && (
                     <p>
-                        <span className="font-semibold text-brand-500">Skills</span>{" "}
-                        {skills}
+                        <span className="font-semibold text-brand-500">Skills</span> {skills}
                     </p>
                 )}
                 {resistances && (
@@ -308,8 +322,7 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
                 )}
                 {languages && (
                     <p>
-                        <span className="font-semibold text-brand-500">Languages</span>{" "}
-                        {languages}
+                        <span className="font-semibold text-brand-500">Languages</span> {languages}
                     </p>
                 )}
                 {(challengeRating || cr) && (
@@ -324,60 +337,89 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
             <StatDivider />
 
             {/* Traits */}
-            {traits && traits.length > 0 && (
-                <div className="space-y-2 text-sm">
-                    {traits.map((t, i) => (
-                        <ActionLine key={i} item={t} manifest={manifest} />
-                    ))}
-                </div>
+            {traits && traits.entries.length > 0 && (
+                <StatBlockSection title="Traits" desc={traits.desc}>
+                    <div className="space-y-2 text-sm">
+                        {traits.entries.map((t, i) => (
+                            <ActionLine key={i} item={t} manifest={manifest} />
+                        ))}
+                    </div>
+                </StatBlockSection>
             )}
 
             {/* Actions */}
-            {actions && actions.length > 0 && (
-                <div className="mt-4">
-                    <h2 className="font-serif text-lg font-bold text-brand-500 border-b border-brand-500 pb-1 mb-2">
-                        Actions
-                    </h2>
+            {actions && actions.entries.length > 0 && (
+                <StatBlockSection title="Actions" desc={actions.desc}>
                     <div className="space-y-2 text-sm">
-                        {actions.map((a, i) => (
+                        {actions.entries.map((a, i) => (
                             <ActionLine key={i} item={a} manifest={manifest} />
                         ))}
                     </div>
-                </div>
+                </StatBlockSection>
+            )}
+
+            {/* Bonus Actions */}
+            {bonusActions && bonusActions.entries.length > 0 && (
+                <StatBlockSection title="Bonus Actions" desc={bonusActions.desc}>
+                    <div className="space-y-2 text-sm">
+                        {bonusActions.entries.map((a, i) => (
+                            <ActionLine key={i} item={a} manifest={manifest} />
+                        ))}
+                    </div>
+                </StatBlockSection>
             )}
 
             {/* Reactions */}
-            {reactions && reactions.length > 0 && (
-                <div className="mt-4">
-                    <h2 className="font-serif text-lg font-bold text-brand-500 border-b border-brand-500 pb-1 mb-2">
-                        Reactions
-                    </h2>
+            {reactions && reactions.entries.length > 0 && (
+                <StatBlockSection title="Reactions" desc={reactions.desc}>
                     <div className="space-y-2 text-sm">
-                        {reactions.map((r, i) => (
+                        {reactions.entries.map((r, i) => (
                             <ActionLine key={i} item={r} manifest={manifest} />
                         ))}
                     </div>
-                </div>
+                </StatBlockSection>
             )}
 
             {/* Legendary Actions */}
-            {legendaryActions && legendaryActions.length > 0 && (
-                <div className="mt-4">
-                    <h2 className="font-serif text-lg font-bold text-brand-500 border-b border-brand-500 pb-1 mb-2">
-                        Legendary Actions
-                    </h2>
-                    <p className="text-sm text-muted-foreground mb-2">
-                        The creature can take 3 legendary actions, choosing from the options below.
-                        Only one legendary action option can be used at a time and only at the end of
-                        another creature{"'"}s turn. The creature regains spent legendary actions at the
-                        start of its turn.
-                    </p>
+            {legendaryActions && legendaryActions.entries.length > 0 && (
+                <StatBlockSection title="Legendary Actions" desc={legendaryActions.desc}>
                     <div className="space-y-2 text-sm">
-                        {legendaryActions.map((a, i) => (
+                        {legendaryActions.entries.map((a, i) => (
                             <ActionLine key={i} item={a} manifest={manifest} />
                         ))}
                     </div>
-                </div>
+                </StatBlockSection>
+            )}
+
+            {/* Spells / Feats / Special (optional future sections) */}
+            {spells && spells.entries.length > 0 && (
+                <StatBlockSection title="Spells" desc={spells.desc}>
+                    <div className="space-y-2 text-sm">
+                        {spells.entries.map((a, i) => (
+                            <ActionLine key={i} item={a} manifest={manifest} />
+                        ))}
+                    </div>
+                </StatBlockSection>
+            )}
+
+            {feats && feats.entries.length > 0 && (
+                <StatBlockSection title="Feats" desc={feats.desc}>
+                    <div className="space-y-2 text-sm">
+                        {feats.entries.map((a, i) => (
+                            <ActionLine key={i} item={a} manifest={manifest} />
+                        ))}
+                    </div>
+                </StatBlockSection>
+            )}
+
+            {special && special.entries.length > 0 && (
+                <StatBlockSection title="Special" desc={special.desc}>
+                    <div className="space-y-2 text-sm">
+                        {special.entries.map((a, i) => (
+                            <ActionLine key={i} item={a} manifest={manifest} />
+                        ))}
+                    </div>
+                </StatBlockSection>
             )}
         </div>
     );
