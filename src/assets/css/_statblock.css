@@ -1,0 +1,20 @@
+/* ---------------------------------------------------------
+   STATBLOCK: WATERFALL COLUMNS FOR SECTIONS
+--------------------------------------------------------- */
+
+.statblock-columns {
+    column-gap: 1.25rem;
+    column-width: 18rem;
+    /* adjust: 16–20rem tends to feel good */
+}
+
+/* Prevent a section from splitting across columns */
+.statblock-section {
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+
+    display: inline-block;
+    /* important for multi-column layouts */
+    width: 100%;
+}
