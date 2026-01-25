@@ -162,6 +162,11 @@
 
     /* Text */
     --text-page: #2b2116; /* warm ink */
+
+    /* Fonts */
+    --font-display: "Cinzel Decorative", "Cinzel", Georgia, serif;
+    --font-body: "Crimson Text", Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .theme-parchment.dark {
