@@ -2,11 +2,24 @@
    STATBLOCK: WATERFALL COLUMNS FOR SECTIONS
 --------------------------------------------------------- */
 
+/* Waterfall multi-column layout for statblock sections */
 .statblock-columns {
-    column-gap: 1.25rem;
-    column-width: 18rem;
-    /* adjust: 16–20rem tends to feel good */
+  /* mobile: 1 column */
+  column-width: 22rem;     /* target column width */
+  column-gap: 1.25rem;
+  column-fill: balance;    /* nice distribution */
 }
+
+/* Make sure sections act like column items and don't split weirdly */
+.statblock-columns > * {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  display: inline-block;   /* important: makes break-inside reliable */
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
 
 /* Prevent a section from splitting across columns */
 .statblock-section {

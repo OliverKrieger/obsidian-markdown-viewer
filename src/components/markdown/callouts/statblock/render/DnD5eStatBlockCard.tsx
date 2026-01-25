@@ -2,6 +2,7 @@ import React from "react";
 import type { Dnd5eStatBlock, ManifestLike } from "../types";
 import { OrnamentBorder, StatDivider } from "./Shared";
 import { StatBlockSection } from "./shared/StatBlockSection";
+import { statBlockWeight } from "../dnd5e/helpers/statBlockSizeHelper";
 
 import { parseAC, parseCR, parseHP } from "../dnd5e/helpers/parseBasics";
 import { Dnd5eHeader } from "../dnd5e/components/Dnd5eHeader";
@@ -49,14 +50,38 @@ export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: Manifest
 
     const subtitle = [size, creatureType, alignment].filter(Boolean).join(" ");
 
+    const weight = statBlockWeight({
+        desc,
+        traits,
+        actions,
+        bonusActions,
+        reactions,
+        legendaryActions,
+        spells,
+        feats,
+        special,
+    });
+
+    // Tune thresholds to taste
+    const isLarge = weight >= 900;
+    const isMedium = weight >= 450;
+
+    const widthClass = isLarge
+        ? "max-w-md md:max-w-2xl xl:max-w-5xl 2xl:max-w-7xl"
+        : isMedium
+            ? "max-w-md md:max-w-2xl xl:max-w-3xl 2xl:max-w-5xl"
+            : "max-w-md md:max-w-lg xl:max-w-xl";
+
+
     return (
         <div
             className={[
-                "relative bg-brand-100/20 p-6 w-full shadow-lg border-2 border-brand-500/40",
-                "max-w-md md:max-w-2xl xl:max-w-3xl 2xl:max-w-7xl",
+                "relative bg-brand-100/20 p-6 w-full mx-auto shadow-lg border-2 border-brand-500/40",
+                widthClass,
                 className ?? "",
             ].join(" ")}
         >
+
             <OrnamentBorder />
 
             <Dnd5eHeader title={title} subtitle={subtitle} desc={desc} />
