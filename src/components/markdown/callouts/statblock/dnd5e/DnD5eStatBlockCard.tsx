@@ -1,15 +1,15 @@
 import React from "react";
 import type { Dnd5eStatBlock, ManifestLike } from "../types";
-import { OrnamentBorder, StatDivider } from "./Shared";
-import { StatBlockSection } from "./shared/StatBlockSection";
-import { statBlockWeight } from "../dnd5e/helpers/statBlockSizeHelper";
+import { OrnamentBorder, StatDivider } from "../render/Shared";
+import { StatBlockSection } from "../render/shared/StatBlockSection";
+import { statBlockWeight } from "./helpers/statBlockSizeHelper";
 
-import { parseAC, parseCR, parseHP } from "../dnd5e/helpers/parseBasics";
-import { Dnd5eHeader } from "../dnd5e/components/Dnd5eHeader";
-import { Dnd5eBasicStats } from "../dnd5e/components/Dnd5eBasicStats";
-import { Dnd5eAbilityGrid } from "../dnd5e/components/Dnd5eAbilityGrid";
-import { Dnd5eAdditionalStats } from "../dnd5e/components/Dnd5eAdditionalStats";
-import { Dnd5eActionLine } from "../dnd5e/components/Dnd5eActionLine";
+import { parseAC, parseCR, parseHP } from "./helpers/parseBasics";
+import { Dnd5eHeader } from "./components/Dnd5eHeader";
+import { Dnd5eBasicStats } from "./components/Dnd5eBasicStats";
+import { Dnd5eAbilityGrid } from "./components/Dnd5eAbilityGrid";
+import { Dnd5eAdditionalStats } from "./components/Dnd5eAdditionalStats";
+import { Dnd5eActionLine } from "./components/Dnd5eActionLine";
 
 export const Dnd5eStatBlockCard: React.FC<Dnd5eStatBlock & { manifest?: ManifestLike }> = ({
     title,

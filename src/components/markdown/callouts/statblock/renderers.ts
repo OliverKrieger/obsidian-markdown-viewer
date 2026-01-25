@@ -1,6 +1,6 @@
 import type { NormalizedStatBlock, ManifestLike } from "./types";
 import { SwadeStatBlockCard } from "./render/SwadeStatBlockCard";
-import { Dnd5eStatBlockCard } from "./render/DnD5eStatBlockCard";
+import { Dnd5eStatBlockCard } from "./dnd5e/DnD5eStatBlockCard";
 import { FallbackStatBlockCard } from "./render/FallbackStatBlcokCard";
 
 export function getStatBlockRenderer(ruleset: string) {
