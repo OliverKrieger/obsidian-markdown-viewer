@@ -32,3 +32,4 @@ bundles/
 
 # environment files
 .env.production
+.env.development
